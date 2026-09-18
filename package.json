@@ -4,6 +4,10 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "turbo run dev",
+    "doppler:dev": "doppler run --config dev -- turbo run dev",
+    "doppler:api": "doppler run --config dev -- pnpm --filter @silakebap/api dev",
+    "doppler:web": "doppler run --config dev -- pnpm --filter @silakebap/web dev",
+    "doppler:admin": "doppler run --config dev -- pnpm --filter @silakebap/admin dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "db:generate": "pnpm --filter @silakebap/database generate",

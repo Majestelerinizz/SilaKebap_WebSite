@@ -1,12 +1,15 @@
 # Entegrasyonlar (Resend + iyzico + Cloudflare R2)
 
+Sırlar için [DOPPLER.md](./DOPPLER.md) kullan; aşağıdaki değerleri Doppler `dev` / `prd` config’lerine koy.
+Disk `.env` yalnızca geçici lokal fallback.
+
 ## Resend (e-posta)
 
 Kod nodemailer SMTP kullanır; Resend SMTP ile uyumludur.
 
 1. [resend.com](https://resend.com) hesap + API key (`re_...`).
 2. Domain ekle ve DNS (SPF/DKIM) doğrula. Domain yokken test için `onboarding@resend.dev` kullanılabilir (çoğunlukla yalnızca kendi hesabına gönderim).
-3. Root `.env`:
+3. Doppler (veya geçici `.env`):
 
 ```
 SMTP_HOST=smtp.resend.com
@@ -21,9 +24,9 @@ SMTP_FROM="Sıla Kebap <noreply@senindomain.com>"
 
 `SMTP_HOST` boşsa mailler API konsoluna yazılır.
 
-## iyzico sandbox (şimdilik opsiyonel)
+## iyzico sandbox (v1 — local ve VPS)
 
-Şirket bilgileri / üye işyeri hazır değilse boş bırakılabilir — sistem `sandbox-stub` modunda kalır.
+v1’de **her ortam sandbox**. Live key ekleme.
 
 ```
 IYZICO_API_KEY=sandbox-...
@@ -32,14 +35,16 @@ IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
 API_PUBLIC_URL=http://localhost:4000
 ```
 
-Key varken checkout “iyzico online” gerçek sandbox sayfasını açar; callback `POST /api/payments/iyzico/callback`.
+Prod’da `API_PUBLIC_URL=https://api.<domain>` (Let’s Encrypt).
+
+Key yoksa sistem `sandbox-stub` modunda kalır. Key varken checkout “iyzico online” gerçek sandbox sayfasını açar; callback `POST /api/payments/iyzico/callback`.
 
 ## Cloudflare R2 (ürün görselleri)
 
 1. Cloudflare Dashboard → **R2** → Create bucket (`silakebap`).
-2. Bucket Settings → **Public access**: R2.dev subdomain **veya** custom domain (`cdn.alanadin.com`).
+2. Bucket Settings → **Public access**: R2.dev subdomain **veya** custom domain.
 3. **Manage R2 API Tokens** → Object Read & Write, bu bucket’a kısıtlı token.
-4. Root `.env`:
+4. Doppler:
 
 ```
 R2_ACCOUNT_ID=...
@@ -52,4 +57,4 @@ R2_PUBLIC_URL=https://pub-xxxx.r2.dev
 5. API restart → Admin → Entegrasyonlar: storage `configured: true`.
 6. Admin → Ürünler → ürünü aç → görsel seç; dosya R2’ye yüklenir, menüde görünür.
 
-CORS: tarayıcıdan doğrudan R2 PUT için bucket CORS’a `http://localhost:3001` ekle (PUT, Content-Type).
+CORS: tarayıcıdan doğrudan R2 PUT için bucket CORS’a admin origin ekle (`http://localhost:3001` veya `https://admin.<domain>`).

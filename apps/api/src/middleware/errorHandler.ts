@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 
 export class HttpError extends Error {
   constructor(
@@ -22,6 +23,12 @@ export function errorHandler(
       error: err.message,
       details: err.details,
     });
+    return;
+  }
+
+  if (err instanceof ZodError) {
+    // Generic message — avoid leaking validation / enumeration details
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 

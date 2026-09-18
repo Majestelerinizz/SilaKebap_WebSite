@@ -17,6 +17,11 @@ import { errorHandler } from "./middleware/errorHandler.js";
 const app = express();
 const httpServer = createServer(app);
 
+// Behind Caddy/Nginx: correct client IP for rate limits
+if (env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 app.use(helmet());
 app.use(
   cors({

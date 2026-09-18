@@ -1,0 +1,9 @@
+﻿# Secrets — never index in Cursor / IDE context
+.env
+.env.*
+!.env.example
+
+# Local Doppler / token dumps
+doppler.yaml
+.doppler
+**/doppler.env

@@ -12,24 +12,33 @@
 
 ## Veritabanı
 
-- **Geliştirme / test:** Neon (`DATABASE_URL` in `.env`)
-- **Production:** VPS üzerinde native PostgreSQL (`DATABASE_URL` prod `.env`)
+- **Geliştirme / test:** Neon (`DATABASE_URL` — Doppler `dev`)
+- **Production:** VPS native PostgreSQL (Doppler `prd`)
 
-## Hızlı başlangıç
+## Secrets (Doppler)
+
+IDE’ye / git’e key yapıştırma. Kurulum: [DOPPLER.md](./DOPPLER.md).
 
 ```bash
-# 1) Bağımlılıklar
 pnpm install
+doppler setup   # project silakebap, config dev
+doppler run --config dev -- pnpm db:push
+doppler run --config dev -- pnpm db:seed
+pnpm doppler:dev   # veya ayrı terminallerde doppler run -- …
+```
 
-# 2) Env
+Geçici disk `.env` hâlâ desteklenir (`cp .env.example .env`) ama commit etme.
+
+## Hızlı başlangıç (özet)
+
+```bash
+pnpm install
+# Doppler tercih edilir; yoksa:
 cp .env.example .env
-# DATABASE_URL = Neon connection string (dev) veya VPS Postgres (prod)
 
-# 3) DB
 pnpm db:push
 pnpm db:seed
 
-# 4) Geliştirme
 pnpm --filter @silakebap/shared build
 pnpm --filter @silakebap/database generate
 pnpm --filter @silakebap/api dev
@@ -45,15 +54,18 @@ pnpm --filter @silakebap/admin dev
 
 | Rol | E-posta | Şifre |
 |---|---|---|
-| Süper admin | admin@silakebap.local | Admin123! |
+| Süper admin | admin@silakebap.local | Admin1234! |
 | Mutfak | mutfak@silakebap.local | Kitchen123! |
 | Kurye | kurye@silakebap.local | Courier123! |
+
+Şifre politikası: **min 10 karakter**. Paylaşılan/prod DB’de seed şifrelerini hemen değiştir.
 
 Kupon: `HOSGELDIN10`
 
 ## Dokümantasyon
 
-- [DEPLOY.md](./DEPLOY.md) — VPS deploy + smoke checklist
-- [INTEGRATIONS.md](./INTEGRATIONS.md) — iyzico / SMTP
+- [DOPPLER.md](./DOPPLER.md) — secrets (local + VPS)
+- [DEPLOY.md](./DEPLOY.md) — VPS + Let’s Encrypt + smoke checklist
+- [INTEGRATIONS.md](./INTEGRATIONS.md) — iyzico / SMTP / R2
 - [AGENTS.md](./AGENTS.md) — ajan / kod kuralları
 - [SILAKEBAP.md](./SILAKEBAP.md) — ürün kapsamı

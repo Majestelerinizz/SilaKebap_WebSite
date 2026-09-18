@@ -66,8 +66,8 @@ export default function LoginPage() {
       </form>
       {error ? <p className={styles.error}>{error}</p> : null}
       <p className={styles.hint}>
-        Seed: admin@silakebap.local / Admin123! · mutfak@… / Kitchen123! ·
-        kurye@… / Courier123!
+        Seed: admin@silakebap.local / Admin1234! · mutfak@… / Kitchen123! ·
+        kurye@… / Courier123! (min 10 karakter; prod’da değiştir)
       </p>
     </main>
   );

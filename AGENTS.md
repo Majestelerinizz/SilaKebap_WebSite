@@ -85,13 +85,16 @@ PAY_AT_STORE
 
 ## Ödeme (iyzico) ile Çalışırken Dikkat
 
-- Geliştirmede **daima sandbox/test API key**; gerçek key’ler koda gömülmez
+- v1’de **local ve VPS sandbox**; live key Doppler’e eklenmez, koda gömülmez
 - Webhook/callback doğrulaması atlanmaz — “ödendi” sadece doğrulanmış callback sonrası
 - Online: sipariş `PENDING_PAYMENT` → callback OK → `RECEIVED`
 - Kapıda / kasada: sipariş doğrudan `RECEIVED`, `paymentStatus` unpaid/pending kalabilir
 - Test kartı bilgileri iyzico dokümantasyonundan; gerçek kartla test yok
 
-## Ortam Değişkenleri (.env)
+## Ortam Değişkenleri (Doppler)
+
+Sırlar **Doppler** `dev` / `prd` config’lerinde tutulur (bkz. `DOPPLER.md`).
+Disk `.env` yalnızca lokal fallback; asla commit edilmez. IDE’ye key yapıştırılmaz.
 
 ```
 DATABASE_URL=
@@ -114,6 +117,8 @@ SOCKET_IO_CORS_ORIGIN=
 WEB_ORIGIN=
 ADMIN_ORIGIN=
 ```
+
+v1: iyzico **sandbox** (local + VPS). Admin login rate-limited; şifre min 10 karakter.
 
 ## Genel Ajan Kuralları
 

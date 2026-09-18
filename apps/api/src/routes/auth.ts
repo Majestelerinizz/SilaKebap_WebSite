@@ -7,15 +7,17 @@ import { StaffRole } from "@silakebap/shared";
 import { env } from "../config/env.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import type { AuthPayload } from "../middleware/auth.js";
+import { authRateLimiter } from "../middleware/rateLimit.js";
 
 export const authRouter = Router();
 
+/** Login body: min 10 chars (policy). Comparison still uses stored hash. */
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(10).max(128),
 });
 
-authRouter.post("/login", async (req, res, next) => {
+authRouter.post("/login", authRateLimiter, async (req, res, next) => {
   try {
     const body = loginSchema.parse(req.body);
     const user = await prisma.user.findUnique({

@@ -61,7 +61,8 @@ async function main() {
     });
   }
 
-  const passwordHash = await bcrypt.hash("Admin123!", 10);
+  // Seed passwords meet API policy (min 10). Change immediately on any shared/prod DB.
+  const passwordHash = await bcrypt.hash("Admin1234!", 10);
   const admin = await prisma.user.create({
     data: {
       email: "admin@silakebap.local",
