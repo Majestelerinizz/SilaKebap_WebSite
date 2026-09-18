@@ -30,9 +30,12 @@ const allowedTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
 
 ordersRouter.get("/track/:token", trackRateLimiter, async (req, res, next) => {
   try {
-    const token = String(req.params.token);
-    const order = await prisma.order.findUnique({
-      where: { trackingToken: token },
+    const raw = String(req.params.token).trim();
+    const key = raw.toUpperCase().startsWith("SK") ? raw.toUpperCase() : raw;
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [{ orderNo: key }, { trackingToken: raw }],
+      },
       include: {
         items: { include: { options: true } },
         statusHistory: { orderBy: { createdAt: "asc" } },
@@ -42,13 +45,21 @@ ordersRouter.get("/track/:token", trackRateLimiter, async (req, res, next) => {
     if (!order) throw new HttpError(404, "Order not found");
     res.json({
       order: {
+        orderNo: order.orderNo,
+        trackingToken: order.trackingToken,
         status: order.status,
         paymentStatus: order.paymentStatus,
         paymentMethod: order.paymentMethod,
         fulfillmentType: order.fulfillmentType,
         totalCents: order.totalCents,
         guestName: order.guestName,
-        items: order.items,
+        items: order.items.map((i) => ({
+          productName: i.productName,
+          quantity: i.quantity,
+          unitPriceCents: i.unitPriceCents,
+          lineTotalCents: i.lineTotalCents,
+          options: i.options,
+        })),
         statusHistory: order.statusHistory,
         branch: order.branch,
         createdAt: order.createdAt,

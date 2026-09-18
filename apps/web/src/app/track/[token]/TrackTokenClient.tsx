@@ -18,6 +18,7 @@ import { getApiUrl } from "@/lib/api";
 import styles from "../track.module.css";
 
 type OrderView = {
+  orderNo: string;
   status: string;
   paymentStatus: string;
   paymentMethod: string;
@@ -28,9 +29,12 @@ type OrderView = {
   items: Array<{
     productName: string;
     quantity: number;
+    unitPriceCents?: number;
+    lineTotalCents?: number;
     options: Array<{ name: string }>;
   }>;
   statusHistory: Array<{ toStatus: string; createdAt: string; note: string | null }>;
+  createdAt: string;
 };
 
 const PAYMENT_STATUS_TR: Record<string, string> = {
@@ -45,9 +49,14 @@ function paymentStatusLabel(status: string): string {
   return PAYMENT_STATUS_TR[status] ?? status;
 }
 
+function copyText(text: string) {
+  void navigator.clipboard?.writeText(text);
+}
+
 export default function TrackTokenClient({ token }: { token: string }) {
   const [order, setOrder] = useState<OrderView | null>(null);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,10 +98,14 @@ export default function TrackTokenClient({ token }: { token: string }) {
   if (error) {
     return (
       <main className={styles.page}>
+        <header className={styles.top}>
+          <BrandMark href="/" size={36} />
+          <ThemeToggle />
+        </header>
         <p>{error}</p>
         <div className={styles.actions}>
           <Link href="/track" className={styles.homeBtn}>
-            Token ile ara
+            Sipariş No ile ara
           </Link>
           <Link href="/" className={styles.homeBtnGhost}>
             Ana sayfaya dön
@@ -105,6 +118,10 @@ export default function TrackTokenClient({ token }: { token: string }) {
   if (!order) {
     return (
       <main className={styles.page}>
+        <header className={styles.top}>
+          <BrandMark href="/" size={36} />
+          <ThemeToggle />
+        </header>
         <p>Yükleniyor…</p>
         <Link href="/" className={styles.homeBtnGhost}>
           Ana sayfaya dön
@@ -115,75 +132,134 @@ export default function TrackTokenClient({ token }: { token: string }) {
 
   const cancelled = order.status === OrderStatus.CANCELLED;
   const pendingPayment = order.status === OrderStatus.PENDING_PAYMENT;
+  const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
+  const isDelivery = order.fulfillmentType === FulfillmentType.DELIVERY;
+  const createdLabel = new Date(order.createdAt).toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  function onCopy() {
+    copyText(order!.orderNo);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  }
 
   return (
-    <main className={styles.page}>
+    <main className={styles.pageWide}>
       <header className={styles.top}>
         <BrandMark href="/" size={36} />
         <ThemeToggle />
       </header>
+
       <h1>Sipariş takip</h1>
-      <p className={styles.status}>{orderStatusLabel(order.status)}</p>
-      <p>
-        {order.guestName} · {fulfillmentLabel(order.fulfillmentType)} ·{" "}
-        {formatTryLabel(order.totalCents)}
-      </p>
-      <p className={styles.muted}>
-        {order.branch.name}
-        {order.branch.phone ? ` · ${order.branch.phone}` : ""}
-      </p>
-      <p className={styles.muted}>
-        Ödeme: {paymentStatusLabel(order.paymentStatus)} (
-        {paymentMethodLabel(order.paymentMethod)})
+      <p className={styles.lead}>
+        Sipariş No ile sorguladın · durum her 8 sn güncellenir.
       </p>
 
-      {cancelled ? (
-        <p className={styles.cancelled}>Sipariş iptal edildi.</p>
-      ) : pendingPayment ? (
-        <p className={styles.pendingPay}>Ödeme tamamlandığında sipariş işleme alınır.</p>
-      ) : (
-        <ol className={styles.steps} aria-label="Sipariş aşamaları">
-          {steps.map((step, idx) => {
-            const done =
-              order.status === OrderStatus.DELIVERED
-                ? idx <= activeStepIndex
-                : idx < activeStepIndex;
-            const current = idx === activeStepIndex;
-            let stepClass = styles.step;
-            if (done) stepClass += ` ${styles.stepDone}`;
-            if (current) stepClass += ` ${styles.stepCurrent}`;
-            return (
-              <li key={step} className={stepClass}>
-                <span className={styles.stepDot} aria-hidden />
-                {orderStatusLabel(step)}
-              </li>
-            );
-          })}
-        </ol>
-      )}
+      <article className={styles.cargoCard}>
+        <div className={styles.cargoHead}>
+          <div className={styles.cargoHeadLeft}>
+            <strong>{order.branch.name}</strong>
+            {order.branch.phone ? (
+              <a className={styles.followBtn} href={`tel:${order.branch.phone}`}>
+                Ara
+              </a>
+            ) : null}
+          </div>
+          <span className={styles.orderNoBadge}>Sipariş No: {order.orderNo}</span>
+        </div>
 
-      <h2>Ürünler</h2>
-      <ul className={styles.list}>
-        {order.items.map((item, idx) => (
-          <li key={idx}>
-            {item.quantity}× {item.productName}
-            {item.options.length
-              ? ` (${item.options.map((o) => o.name).join(", ")})`
-              : ""}
-          </li>
-        ))}
-      </ul>
+        {cancelled ? (
+          <p className={styles.cancelled}>Sipariş iptal edildi.</p>
+        ) : pendingPayment ? (
+          <p className={styles.pendingPay}>
+            Ödeme tamamlandığında sipariş işleme alınır.
+          </p>
+        ) : (
+          <ol className={styles.cargoSteps} aria-label="Sipariş aşamaları">
+            {steps.map((step, idx) => {
+              const done =
+                order.status === OrderStatus.DELIVERED
+                  ? idx <= activeStepIndex
+                  : idx < activeStepIndex;
+              const current = idx === activeStepIndex;
+              let cls = styles.cargoStep;
+              if (done) cls += ` ${styles.cargoStepDone}`;
+              if (current) cls += ` ${styles.cargoStepCurrent}`;
+              return (
+                <li key={step} className={cls}>
+                  <span className={styles.cargoDot} aria-hidden>
+                    {done || current ? "✓" : ""}
+                  </span>
+                  <span className={styles.cargoStepLabel}>
+                    {orderStatusLabel(step)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        )}
 
-      <h2>Durum geçmişi</h2>
-      <ol className={styles.timeline}>
-        {order.statusHistory.map((h, idx) => (
-          <li key={idx}>
-            <strong>{orderStatusLabel(h.toStatus)}</strong>
-            <span>{new Date(h.createdAt).toLocaleString("tr-TR")}</span>
-            {h.note ? <em>{h.note}</em> : null}
-          </li>
-        ))}
-      </ol>
+        <div className={styles.shipBanner}>
+          <div className={styles.shipLeft}>
+            <p className={styles.shipTitle}>
+              {isDelivery ? "Kurye teslimat" : "Gel-Al"} · {itemCount} ürün
+            </p>
+            <p className={styles.shipMeta}>Sipariş tarihi: {createdLabel}</p>
+            <p className={styles.shipMeta}>
+              {order.guestName} · {fulfillmentLabel(order.fulfillmentType)} ·{" "}
+              {paymentMethodLabel(order.paymentMethod)} (
+              {paymentStatusLabel(order.paymentStatus)})
+            </p>
+          </div>
+          <div className={styles.shipRight}>
+            <p className={styles.shipNo}>
+              Sipariş No: <strong>{order.orderNo}</strong>
+              <button
+                type="button"
+                className={styles.copyBtn}
+                onClick={onCopy}
+                aria-label="Sipariş numarasını kopyala"
+              >
+                {copied ? "✓" : "⧉"}
+              </button>
+            </p>
+            <p className={styles.statusPill}>{orderStatusLabel(order.status)}</p>
+          </div>
+        </div>
+
+        <div className={styles.productGrid}>
+          {order.items.map((item, idx) => (
+            <div key={idx} className={styles.productCard}>
+              <div className={styles.productThumb} aria-hidden>
+                {item.productName.slice(0, 1)}
+              </div>
+              <div className={styles.productInfo}>
+                <p className={styles.productName}>{item.productName}</p>
+                {item.options.length ? (
+                  <p className={styles.productOpts}>
+                    {item.options.map((o) => o.name).join(", ")}
+                  </p>
+                ) : null}
+                <p className={styles.productQty}>{item.quantity} adet</p>
+                <p className={styles.productPrice}>
+                  {formatTryLabel(
+                    item.lineTotalCents ??
+                      (item.unitPriceCents ?? 0) * item.quantity,
+                  )}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.cargoFooter}>
+          <span>Toplam</span>
+          <strong>{formatTryLabel(order.totalCents)}</strong>
+        </div>
+      </article>
 
       <div className={styles.actions}>
         <Link href="/" className={styles.homeBtn}>

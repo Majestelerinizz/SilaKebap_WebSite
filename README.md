@@ -4,53 +4,53 @@
 
 ## Stack
 
-- `apps/web` — müşteri Next.js
-- `apps/admin` — admin / mutfak / kurye Next.js
-- `apps/api` — Express + Socket.io + iyzico
-- `packages/database` — PostgreSQL + Prisma
-- `packages/shared` — enum, para, checkout Zod
+| Paket | Rol |
+|---|---|
+| `apps/web` | Müşteri Next.js |
+| `apps/admin` | Admin + mutfak + kurye |
+| `apps/api` | Express + Socket.io + iyzico |
+| `packages/database` | PostgreSQL + Prisma |
+| `packages/shared` | Enum, para, checkout Zod, TR etiketler |
 
-## Veritabanı
+## Canlı (production)
 
-- **Geliştirme / test:** Neon (`DATABASE_URL` — Doppler `dev`)
-- **Production:** VPS native PostgreSQL (Doppler `prd`)
+Contabo VPS + CloudPanel nginx + TLS. SSH: `~/.ssh/config` → Host **`contabo`**.
 
-## Secrets (Doppler)
+| Servis | URL | Upstream |
+|---|---|---|
+| Müşteri | https://silakebapgazianteplahmacunu.com | `127.0.0.1:13100` |
+| Admin | https://admin.silakebapgazianteplahmacunu.com | `127.0.0.1:13101` |
+| API | https://api.silakebapgazianteplahmacunu.com | `127.0.0.1:14100` |
+| Health | https://api.silakebapgazianteplahmacunu.com/api/health | — |
 
-IDE’ye / git’e key yapıştırma. Kurulum: [DOPPLER.md](./DOPPLER.md).
+Kod yolu sunucuda: `/opt/silakebap` · user: `silakebap` · secrets: `/opt/silakebap/.env`
 
-```bash
-pnpm install
-doppler setup   # project silakebap, config dev
-doppler run --config dev -- pnpm db:push
-doppler run --config dev -- pnpm db:seed
-pnpm doppler:dev   # veya ayrı terminallerde doppler run -- …
-```
+Detay: [DEPLOY.md](./DEPLOY.md) · durum: [STATUS.md](./STATUS.md)
 
-Geçici disk `.env` hâlâ desteklenir (`cp .env.example .env`) ama commit etme.
-
-## Hızlı başlangıç (özet)
+## Local geliştirme
 
 ```bash
 pnpm install
-# Doppler tercih edilir; yoksa:
-cp .env.example .env
+cp .env.example .env   # veya Doppler: bak DOPPLER.md
 
 pnpm db:push
 pnpm db:seed
 
 pnpm --filter @silakebap/shared build
 pnpm --filter @silakebap/database generate
-pnpm --filter @silakebap/api dev
-pnpm --filter @silakebap/web dev
-pnpm --filter @silakebap/admin dev
+pnpm --filter @silakebap/api dev      # :4000
+pnpm --filter @silakebap/web dev      # :3000
+pnpm --filter @silakebap/admin dev    # :3001
 ```
 
 - Web: http://localhost:3000  
-- Admin: http://localhost:3001  
-- API: http://localhost:4000/api/health  
+- Admin: http://localhost:3001/login  
+- Mutfak: http://localhost:3001/kitchen  
+- Kurye: http://localhost:3001/courier  
+- Health: http://localhost:4000/api/health  
+- Sipariş takip: http://localhost:3000/track (**Sipariş No**, örn. `SK8A3F2B1C`)
 
-### Seed hesapları
+### Seed hesapları (yalnızca local / ilk kurulum)
 
 | Rol | E-posta | Şifre |
 |---|---|---|
@@ -58,15 +58,23 @@ pnpm --filter @silakebap/admin dev
 | Mutfak | mutfak@silakebap.local | Kitchen123! |
 | Kurye | kurye@silakebap.local | Courier123! |
 
-Şifre politikası: **min 10 karakter**. Paylaşılan/prod DB’de seed şifrelerini hemen değiştir.
+Şifre min **10** karakter. Prod’da seed şifrelerini değiştir. Kupon: `HOSGELDIN10`
 
-Kupon: `HOSGELDIN10`
+## Deploy (laptop → Contabo)
+
+```bash
+# bir kez: deploy/deploy.env.example → deploy/deploy.env
+bash deploy/scripts/deploy.sh
+```
+
+Gereksinim: Windows/WSL veya Git Bash + `ssh` Host `contabo` + `rsync`.
 
 ## Dokümantasyon
 
-- [STATUS.md](./STATUS.md) — v1 ~%95 durumu + senin yapacakların
-- [DOPPLER.md](./DOPPLER.md) — secrets (local + VPS)
-- [DEPLOY.md](./DEPLOY.md) — VPS + Let’s Encrypt + smoke checklist
+- [STATUS.md](./STATUS.md) — tamamlanma % + kalan işler
+- [DEPLOY.md](./DEPLOY.md) — Contabo / nginx / systemd / smoke
+- [DOPPLER.md](./DOPPLER.md) — secrets (önerilen)
 - [INTEGRATIONS.md](./INTEGRATIONS.md) — iyzico / SMTP / R2
-- [AGENTS.md](./AGENTS.md) — ajan / kod kuralları
+- [AGENTS.md](./AGENTS.md) — ajan kuralları
 - [SILAKEBAP.md](./SILAKEBAP.md) — ürün kapsamı
+- [deploy/](./deploy/) — rsync script + nginx/systemd örnekleri

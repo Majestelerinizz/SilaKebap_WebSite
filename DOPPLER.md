@@ -23,15 +23,20 @@ doppler setup
 
 **Live iyzico key’leri bu aşamada Doppler’e ekleme.**
 
-Örnek `prd` origin’ler (apex domain’ini kendi alanınla değiştir):
+Örnek `prd` / Contabo origin’ler (canlı domain):
 
 ```
-WEB_ORIGIN=https://www.ornek.com
-ADMIN_ORIGIN=https://admin.ornek.com
-API_PUBLIC_URL=https://api.ornek.com
+WEB_ORIGIN=https://silakebapgazianteplahmacunu.com
+ADMIN_ORIGIN=https://admin.silakebapgazianteplahmacunu.com
+API_PUBLIC_URL=https://api.silakebapgazianteplahmacunu.com
+NEXT_PUBLIC_API_URL=https://api.silakebapgazianteplahmacunu.com
 IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
 NODE_ENV=production
+API_PORT=14100
 ```
+
+Not: Production şu an çoğunlukla VPS üzerindeki `/opt/silakebap/.env` ile çalışır.
+Doppler `prd` opsiyonel; bağlarsan systemd’yi `doppler run` ile güncelle ([DEPLOY.md](./DEPLOY.md)).
 
 ## Local geliştirme
 

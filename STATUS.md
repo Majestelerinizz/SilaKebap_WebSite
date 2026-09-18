@@ -1,25 +1,48 @@
-# v1 maturity (~%95 hedef)
+# Proje durumu (v1)
 
-Kod tarafında müşteri + API + admin operasyon çekirdeği ~%95 seviyesine yaklaştırıldı.
-Aşağıdakiler **senin ortamında** yapılmadan “canlı restoran” %95 sayılmaz:
+Son güncelleme: 2026-09-19
 
-## Senin yapman gerekenler (dış bağımlılık)
+## Tamamlanma (kabaca)
 
-1. **Doppler** — `doppler login` + project `silakebap` (`dev` / `prd`), secret’ları doldur ([DOPPLER.md](./DOPPLER.md))
-2. **VPS + Let’s Encrypt** — domain DNS + Caddy/Nginx ([DEPLOY.md](./DEPLOY.md))
-3. **SMTP** — Resend veya başka SMTP (takip mailleri)
-4. **iyzico sandbox key** — gerçek sandbox; live key v1’de yok
-5. **Gerçek ürün fotoğrafları** — `apps/web/public/menu` yerine marka çekimleri / R2
-6. **Sosyal URL’ler** — `apps/web/src/app/page.tsx` içindeki `SOCIAL`
-7. **Seed yeniden** — geniş menü için `doppler run -- pnpm db:seed` (dev DB’yi sıfırlar)
+| Alan | % | Not |
+|---|---|---|
+| Monorepo / API çekirdek | ~95% | Checkout, sipariş FSM, track, auth |
+| Contabo prod deploy | ~90% | Canlı; local kod ↔ VPS sync eksik kalabilir |
+| Müşteri web | ~85–90% | Sepet, ödeme, track kartı; gerçek foto/sosyal |
+| Admin / mutfak / kurye | ~70–75% | Çalışır; CRUD/tablet cilası eksik |
+| Ödeme (iyzico) | ~75% | Sandbox/stub; live key yok |
+| E-posta | ~50% | Şablonlar hazır; SMTP prod’da boş olabilir |
+| **Genel v1** | **~80–85%** | Site canlı kullanılabilir |
 
-## Bu turda kodda kapananlar
+## Canlı URL’ler
 
-- Geniş menü seed (14 ürün, 5 kategori)
-- TR sipariş/ödeme etiketleri (`@silakebap/shared` labels)
-- E-posta şablonları (TR durum, güvenli send)
-- Checkout/track/payment rate limit; auth refresh endpoint
-- Çalışma saati + mahalle kontrolü checkout’ta
-- Online ödemede e-posta zorunlu; kupon kullanımı ödemeden sonra
-- Track timeline + adımlar; checkout Ödeme/mahalle; homepage kategoriler
-- Admin: logout, refresh, mutfak kolonları, kurye tel:, rol nav
+- Web: https://silakebapgazianteplahmacunu.com  
+- Admin: https://admin.silakebapgazianteplahmacunu.com/login  
+- Mutfak: https://admin.silakebapgazianteplahmacunu.com/kitchen  
+- Kurye: https://admin.silakebapgazianteplahmacunu.com/courier  
+- Health: https://api.silakebapgazianteplahmacunu.com/api/health  
+- Takip: https://silakebapgazianteplahmacunu.com/track  
+
+SSH: `C:\Users\Yusuf\.ssh` · Host `contabo`
+
+## Kalan işler (öncelik)
+
+1. Local → Contabo **release** (`deploy/scripts/deploy.sh`) — track/`orderNo` vb. güncel kodu bas  
+2. SMTP (Resend) — takip mailleri  
+3. iyzico sandbox key (veya bilerek stub)  
+4. Gerçek menü fotoğrafları / R2  
+5. Sosyal Instagram/Facebook URL  
+6. Admin ürün/bölge CRUD + mutfak tablet UX  
+7. Doppler `prd` (opsiyonel; şu an VPS `.env`)  
+
+## Bu sprintte kodda kapananlar (local)
+
+- Geniş menü seed, TR labels, e-posta şablonları  
+- Rate limit, auth refresh, checkout saat/mahalle  
+- Sipariş No (`orderNo`) + kargo tarzı track UI  
+- Theme hydration fix (`layout.tsx`)  
+- Deploy klasörü Contabo’dan local’e alındı  
+
+## Bilinçli ertelenenler (faz 2)
+
+- Live iyzico, SMS, kurye GPS, `BRANCH_MANAGER`, çok şube UI

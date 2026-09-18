@@ -9,6 +9,7 @@ import { startIyzicoPayment } from "../services/iyzicoService.js";
 import { sendOrderStatusEmail } from "../services/emailService.js";
 import { emitOrderCreated } from "../realtime/emit.js";
 import { checkoutRateLimiter } from "../middleware/rateLimit.js";
+import { env } from "../config/env.js";
 
 export const checkoutRouter = Router();
 
@@ -46,12 +47,13 @@ checkoutRouter.post("/", checkoutRateLimiter, async (req, res, next) => {
     res.status(201).json({
       order: {
         id: order.id,
+        orderNo: order.orderNo,
         status: order.status,
         paymentStatus: order.paymentStatus,
         paymentMethod: order.paymentMethod,
         totalCents: order.totalCents,
         trackingToken: order.trackingToken,
-        trackingUrl: `${process.env.WEB_ORIGIN ?? "http://localhost:3000"}/track/${order.trackingToken}`,
+        trackingUrl: `${env.WEB_ORIGIN}/track/${order.orderNo}`,
       },
       iyzico,
     });

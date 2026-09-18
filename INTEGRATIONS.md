@@ -1,7 +1,9 @@
 # Entegrasyonlar (Resend + iyzico + Cloudflare R2)
 
-Sırlar için [DOPPLER.md](./DOPPLER.md) kullan; aşağıdaki değerleri Doppler `dev` / `prd` config’lerine koy.
-Disk `.env` yalnızca geçici lokal fallback.
+Canlı domain: `silakebapgazianteplahmacunu.com` (admin / api alt domainleri).
+Sırlar: VPS `/opt/silakebap/.env` veya [DOPPLER.md](./DOPPLER.md). Şablon: [deploy/remote.env.example](./deploy/remote.env.example).
+
+Disk `.env` yalnızca geçici lokal fallback; commit etme.
 
 ## Resend (e-posta)
 

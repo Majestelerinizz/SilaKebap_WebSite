@@ -1,144 +1,98 @@
-# VPS Deploy (Docker yok) + Let’s Encrypt + Doppler
+# Deploy — Contabo VPS (canlı)
+
+## Mevcut production (2026-09)
+
+| Öğe | Değer |
+|---|---|
+| SSH | `Host contabo` → `62.171.146.132` (user `root`, key `~/.ssh/id_ed25519`) |
+| App path | `/opt/silakebap` |
+| App user | `silakebap` |
+| Secrets | `/opt/silakebap/.env` (chmod 600; commit etme) |
+| Panel | CloudPanel + **nginx** (TLS sertifikaları panelde) |
+| DB | VPS PostgreSQL (`DATABASE_URL` → localhost) |
+| Redis | Sunucuda var; API Redis olmadan da ayağa kalkar |
+
+### Domain / port map
+
+| Public host | systemd | Listen |
+|---|---|---|
+| https://silakebapgazianteplahmacunu.com | `silakebap-web` | `13100` |
+| https://www.silakebapgazianteplahmacunu.com | `silakebap-web` | `13100` |
+| https://admin.silakebapgazianteplahmacunu.com | `silakebap-admin` | `13101` |
+| https://api.silakebapgazianteplahmacunu.com | `silakebap-api` | `14100` |
+
+Health: `GET https://api.silakebapgazianteplahmacunu.com/api/health` → `{"ok":true,...,"db":"up"}`
+
+### Admin paneli yolları
+
+| Sayfa | URL |
+|---|---|
+| Login | `/login` |
+| Dashboard | `/dashboard` |
+| Mutfak | `/kitchen` |
+| Kurye | `/courier` |
+| Ürünler / bölgeler / kupon / siparişler / entegrasyonlar | dashboard linkleri |
 
 ## Ortamlar
 
-| Ortam | Veritabanı | Secrets | iyzico |
+| Ortam | DB | Secrets | iyzico (v1) |
 |---|---|---|---|
-| Geliştirme / test (`dev`) | Neon | Doppler `dev` | Sandbox |
-| Production (`prd`) | VPS localhost PostgreSQL | Doppler `prd` (service token) | **Sandbox** (v1) |
+| Local | Neon | Doppler `dev` veya `.env` | Sandbox |
+| Production | VPS Postgres | `/opt/silakebap/.env` (Doppler `prd` opsiyonel) | Sandbox / key yoksa stub |
 
-Live iyzico key’leri v1’de kullanılmaz; Doppler’e ekleme.
+Live iyzico key’leri v1’de zorunlu değil.
 
-Sırlar için ayrıntı: [DOPPLER.md](./DOPPLER.md).
+Şablon: [deploy/remote.env.example](./deploy/remote.env.example) · [DOPPLER.md](./DOPPLER.md)
 
-## Domain topolojisi (TLS)
+## Laptop’tan release
 
-Aynı VPS, reverse proxy + Let’s Encrypt:
+Repo kökünden (Git Bash / WSL):
 
-| Host | Upstream |
-|---|---|
-| `https://www.<domain>` | web `:3000` |
-| `https://admin.<domain>` | admin `:3001` |
-| `https://api.<domain>` | api `:4000` |
-
-Doppler `prd` örnekleri:
-
-```
-WEB_ORIGIN=https://www.<domain>
-ADMIN_ORIGIN=https://admin.<domain>
-API_PUBLIC_URL=https://api.<domain>
-IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
-NODE_ENV=production
+```bash
+cp deploy/deploy.env.example deploy/deploy.env   # gerekirse düzenle
+bash deploy/scripts/deploy.sh
+# ilk kurulum: bash deploy/scripts/deploy.sh --bootstrap
+# seed (DİKKAT: DB temizler): bash deploy/scripts/deploy.sh --seed
 ```
 
-CORS / Socket.io yalnızca bu origin’lere açık olmalıdır.
+Script: rsync → remote `pnpm install` + build + `systemctl restart silakebap-*`.  
+`.env` rsync ile **silinmez** (`--exclude .env`).
 
-## VPS üzerinde
+Windows notu: `rsync` yoksa WSL kullan veya Contabo’ya Git clone + sunucu içi pull akışına geç.
 
-1. Node 22 + pnpm + Doppler CLI kur
-2. Private repo’yu klonla (`gh auth` veya deploy key), `pnpm install`
-3. Doppler service token ile `prd` bağla (disk `.env` oluşturma — [DOPPLER.md](./DOPPLER.md))
-4. DB:
-   ```bash
-   doppler run -- pnpm db:push   # veya prisma migrate deploy
-   doppler run -- pnpm db:seed   # yalnız ilk kurulum; ardından seed şifrelerini değiştir
-   ```
-5. Build:
-   ```bash
-   doppler run -- pnpm --filter @silakebap/shared build
-   doppler run -- pnpm --filter @silakebap/database build
-   doppler run -- pnpm --filter @silakebap/api build
-   doppler run -- pnpm --filter @silakebap/web build
-   doppler run -- pnpm --filter @silakebap/admin build
-   ```
-6. Process manager (systemd / pm2) — her servis `doppler run -- …`:
-   - API: `pnpm --filter @silakebap/api start` (4000)
-   - Web: `pnpm --filter @silakebap/web start` (3000)
-   - Admin: `pnpm --filter @silakebap/admin start` (3001)
+## systemd (özet)
 
-### systemd örneği (API)
+Dosyalar: [deploy/systemd/](./deploy/systemd/)
 
-`/etc/systemd/system/silakebap-api.service`:
-
-```ini
-[Unit]
-Description=Sila Kebap API
-After=network.target
-
-[Service]
-Type=simple
-User=deploy
-WorkingDirectory=/opt/silakebap
-EnvironmentFile=/etc/silakebap/doppler.env
-ExecStart=/usr/bin/doppler run -- pnpm --filter @silakebap/api start
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
+```bash
+ssh contabo 'systemctl status silakebap-web silakebap-admin silakebap-api --no-pager'
+ssh contabo 'journalctl -u silakebap-api -n 50 --no-pager'
 ```
 
-`doppler.env` yalnızca `DOPPLER_TOKEN` / `DOPPLER_PROJECT` / `DOPPLER_CONFIG` içerir (`chmod 600`).
+## Nginx örnekleri
 
-## Reverse proxy + Let’s Encrypt
+CloudPanel site conf’larına eklenecek `location` parçaları: [deploy/nginx/](./deploy/nginx/)
 
-### Caddy (önerilen)
+## Auth / güvenlik
 
-```caddy
-www.ornek.com {
-  reverse_proxy 127.0.0.1:3000
-}
+- Login rate limit + şifre min 10
+- Repo: GitHub private `Majestelerinizz/SilaKebap_WebSite`
+- Sipariş takip: **Sipariş No** (`SK…`) — `/track`
 
-admin.ornek.com {
-  reverse_proxy 127.0.0.1:3001
-}
+## Smoke checklist (prod)
 
-api.ornek.com {
-  reverse_proxy 127.0.0.1:4000
-}
-```
+- [x] Health 200 + `db:up`
+- [ ] Admin login HTTPS
+- [ ] Mutfak gerçek zamanlı sipariş
+- [ ] Checkout → mutfak → kurye / gel-al
+- [ ] `/track` Sipariş No
+- [ ] SMTP takip maili (SMTP doluysa)
+- [ ] iyzico sandbox (key varsa)
 
-Caddy otomatik TLS alır. DNS A kayıtlarını VPS IP’ye yönlendir.
+## Local portlar (karıştırmayın)
 
-### Nginx + certbot
-
-- Üç `server` bloğu → `proxy_pass` 3000 / 3001 / 4000
-- `certbot --nginx -d www.… -d admin.… -d api.…`
-
-## Redis
-
-Tek API process için zorunlu değil. Socket.io Redis olmadan çalışır.
-Ölçeklenince `REDIS_URL` verin.
-
-## Cloudflare R2
-
-Ürün görselleri için `R2_*` secret’larını Doppler `prd`’ye koyun. Admin `/api/admin/storage` durumunu gösterir.
-
-## Auth / güvenlik (v1)
-
-- Admin login: rate limit (15 dk / 20 deneme) + şifre min 10 karakter
-- Seed hesapları yalnızca ilk kurulum; paylaşılmış/prod DB’de hemen değiştir
-- Repo private; secret’lar Doppler’de
-
-## Smoke test checklist (prod)
-
-- [ ] `GET https://api.<domain>/api/health` 200
-- [ ] Admin login (`SUPER_ADMIN`) — HTTPS
-- [ ] Admin → Entegrasyonlar: iyzico **sandbox** + SMTP durumu
-- [ ] Menü listeleniyor
-- [ ] Ürün detay + sepete ekle
-- [ ] Checkout quote toplam doğru
-- [ ] Kapıda nakit sipariş → mutfakta görünür
-- [ ] Mutfak: PREPARING → READY
-- [ ] Kurye: ASSIGNED → ON_THE_WAY → DELIVERED
-- [ ] Gel-Al: AWAITING_PICKUP → DELIVERED
-- [ ] iyzico **sandbox** online ödeme (key varsa)
-- [ ] E-posta takip linki (SMTP varsa)
-- [ ] HTTPS web + admin + API (Let’s Encrypt)
-
-## iyzico (v1)
-
-| Config | iyzico |
-|---|---|
-| `dev` / `prd` | Sandbox key + `IYZICO_BASE_URL=https://sandbox-api.iyzipay.com` |
-
-Live key’ler ayrı bir faza kadar Doppler’de tutulmaz.
+| App | Local | Prod VPS |
+|---|---|---|
+| web | 3000 | 13100 |
+| admin | 3001 | 13101 |
+| api | 4000 | 14100 |

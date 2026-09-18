@@ -40,6 +40,11 @@ function trackingToken(): string {
   return randomBytes(24).toString("hex");
 }
 
+/** Kısa sipariş no — müşteri sorgusu için */
+function orderNo(): string {
+  return `SK${randomBytes(4).toString("hex").toUpperCase()}`;
+}
+
 export async function priceCheckout(input: CheckoutInput): Promise<PricedCheckout> {
   const branch = await prisma.branch.findUnique({ where: { id: input.branchId } });
   if (!branch) throw new HttpError(404, "Branch not found");
@@ -250,6 +255,7 @@ export async function createOrderFromCheckout(priced: PricedCheckout) {
           discountCents: priced.discountCents,
           totalCents: priced.totalCents,
           couponId: priced.couponId,
+          orderNo: orderNo(),
           trackingToken: trackingToken(),
           items: {
             create: priced.lines.map((line) => ({

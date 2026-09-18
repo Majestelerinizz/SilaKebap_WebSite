@@ -15,5 +15,9 @@ coverage
 doppler.yaml
 .doppler
 **/doppler.env
+deploy/deploy.env
 
 *.tsbuildinfo
+
+# Local binaries (cloudflared etc.)
+tools/

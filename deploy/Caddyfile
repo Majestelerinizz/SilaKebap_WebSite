@@ -1,0 +1,29 @@
+# Sıla Kebap — optional Caddy reverse proxy (NOT used with CloudPanel).
+# CloudPanel already owns :80/:443. Prefer deploy/nginx/*.conf snippets there.
+#
+# Ports (must match systemd / .env):
+#   web   13000
+#   admin 13001
+#   api   14000
+
+silekebapgazianteplahmacunu.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:13000
+}
+
+www.silekebapgazianteplahmacunu.com {
+	redir https://silekebapgazianteplahmacunu.com{uri} permanent
+}
+
+admin.silekebapgazianteplahmacunu.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:13001
+}
+
+api.silekebapgazianteplahmacunu.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:14000 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+}

@@ -9,12 +9,13 @@ import styles from "./track.module.css";
 
 export default function TrackPage() {
   const router = useRouter();
-  const [token, setToken] = useState("");
+  const [orderNo, setOrderNo] = useState("");
 
   function go(e: React.FormEvent) {
     e.preventDefault();
-    if (!token.trim()) return;
-    router.push(`/track/${token.trim()}`);
+    const q = orderNo.trim().toUpperCase();
+    if (!q) return;
+    router.push(`/track/${q}`);
   }
 
   return (
@@ -25,14 +26,15 @@ export default function TrackPage() {
       </header>
       <h1>Sipariş takip</h1>
       <p className={styles.lead}>
-        Sipariş sonrası gelen takip kodunu girerek durumunu görebilirsin.
+        Sipariş numaranı girerek durumunu anlık takip edebilirsin.
       </p>
       <form onSubmit={go} className={styles.form}>
         <input
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Takip kodu"
-          aria-label="Takip kodu"
+          value={orderNo}
+          onChange={(e) => setOrderNo(e.target.value)}
+          placeholder="Sipariş No (ör. SK8A3F2B1C)"
+          aria-label="Sipariş No"
+          autoCapitalize="characters"
           required
         />
         <button type="submit">Getir</button>

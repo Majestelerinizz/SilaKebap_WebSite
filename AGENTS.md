@@ -19,7 +19,7 @@ e-ticaret platformu. Detaylı kapsam için `SILAKEBAP.md` dosyasına bak.
 - **Ödeme:** iyzico API (sandbox/live `.env`)
 - **E-posta:** pluggable SMTP (v1); SMS sonra
 - **Görseller:** Cloudflare R2
-- **Hosting:** kendi VPS üzerinde Node süreçleri (`web`, `admin`, `api`) + native PostgreSQL
+- **Hosting:** Contabo VPS (`/opt/silakebap`) + CloudPanel nginx TLS; web `13100` / admin `13101` / api `14100`; domain `silakebapgazianteplahmacunu.com`; SSH Host `contabo`; deploy `bash deploy/scripts/deploy.sh` (see DEPLOY.md)
 - **DB ortamları:** geliştirme/test → Neon; production → VPS localhost PostgreSQL
 
 ## Klasör Yapısı
@@ -132,8 +132,7 @@ v1: iyzico **sandbox** (local + VPS). Admin login rate-limited; şifre min 10 ka
 ## Prisma şema özeti
 
 Ana modeller: `Branch`, `DeliveryZone`, `WorkingHours`, `User`, `StaffMembership`,
-`Category`, `Product`, `OptionGroup`, `OptionItem`, `BranchProduct`, `Order`,
-`OrderItem`, `OrderItemOption`, `OrderStatusHistory`, `Payment`, `Coupon`, `Address`,
+`Category`, `Product`, `OptionGroup`, `OptionItem`, `BranchProduct`, `Order` (incl. `orderNo` + `trackingToken`), `OrderItem`, `OrderItemOption`, `OrderStatusHistory`, `Payment`, `Coupon`, `Address`,
 `Media`. Detay: `packages/database/prisma/schema.prisma`.
 
 ## Backlog / Sonraki Adımlar
@@ -141,8 +140,10 @@ Ana modeller: `Branch`, `DeliveryZone`, `WorkingHours`, `User`, `StaffMembership
 - [x] Altyapı kararları ve belge senkronu
 - [x] Prisma şeması (çok şubeli)
 - [x] Monorepo iskeleti
-- [ ] Menü/kategori gerçek ürün verisinin çıkarılması
+- [x] Contabo prod (nginx TLS + systemd web/admin/api)
+- [x] Sipariş No + takip UI; auth rate limit
+- [ ] Local → Contabo release (güncel kod sync)
+- [ ] Menü/kategori gerçek ürün görselleri
 - [ ] iyzico sandbox hesabı / key’ler
-- [ ] SMTP sağlayıcı seçimi ve şablonlar
-- [ ] Domain / TLS prod ayarı
+- [ ] SMTP sağlayıcı (takip mailleri)
 - [ ] Faz 2: SMS, kurye haritası, BRANCH_MANAGER, çok şube UI

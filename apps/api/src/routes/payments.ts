@@ -62,7 +62,7 @@ paymentsRouter.post("/iyzico/callback", paymentCallbackRateLimiter, async (req, 
 
     if (order.status !== OrderStatus.PENDING_PAYMENT) {
       if (req.accepts("html")) {
-        res.redirect(`${env.WEB_ORIGIN}/track/${order.trackingToken}`);
+        res.redirect(`${env.WEB_ORIGIN}/track/${order.orderNo}`);
         return;
       }
       res.json({ ok: true, orderId: order.id, status: order.status });
@@ -110,7 +110,7 @@ paymentsRouter.post("/iyzico/callback", paymentCallbackRateLimiter, async (req, 
     emitOrderCreated(req.app.get("io"), updated);
 
     if (req.accepts("html") && !simulateSuccess) {
-      res.redirect(`${env.WEB_ORIGIN}/track/${updated.trackingToken}`);
+      res.redirect(`${env.WEB_ORIGIN}/track/${updated.orderNo}`);
       return;
     }
 
@@ -119,6 +119,7 @@ paymentsRouter.post("/iyzico/callback", paymentCallbackRateLimiter, async (req, 
       orderId: updated.id,
       status: updated.status,
       trackingToken: updated.trackingToken,
+      orderNo: updated.orderNo,
     });
   } catch (err) {
     next(err);

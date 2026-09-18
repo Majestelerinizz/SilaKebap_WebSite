@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Syne, DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 
@@ -20,6 +19,8 @@ const body = DM_Sans({
   variable: "--font-body",
   weight: ["400", "500", "600", "700"],
 });
+
+const themeInitScript = `(function(){try{var k='silakebap.theme';var t=localStorage.getItem(k);if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: "Sıla Kebap",
@@ -52,9 +53,9 @@ export default function RootLayout({
       className={`${display.variable} ${serif.variable} ${body.variable}`}
       suppressHydrationWarning
     >
-      <Script id="silakebap-theme-init" strategy="beforeInteractive">
-        {`(function(){try{var k='silakebap.theme';var t=localStorage.getItem(k);if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`}
-      </Script>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

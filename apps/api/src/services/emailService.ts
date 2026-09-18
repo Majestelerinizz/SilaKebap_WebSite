@@ -69,13 +69,13 @@ export async function sendOrderStatusEmail(orderId: string): Promise<void> {
       return;
     }
 
+    const trackingUrl = `${env.WEB_ORIGIN}/track/${order.orderNo}`;
     const statusTr = orderStatusLabel(order.status);
-    const trackingUrl = `${env.WEB_ORIGIN}/track/${order.trackingToken}`;
     const isNew =
       order.status === "RECEIVED" || order.status === "PENDING_PAYMENT";
     const subject = isNew
-      ? `Siparişiniz alındı — ${order.branch.name}`
-      : `Sipariş güncellemesi — ${statusTr}`;
+      ? `Siparişiniz alındı — ${order.orderNo}`
+      : `Sipariş güncellemesi — ${order.orderNo} · ${statusTr}`;
     const itemLines = order.items
       .map((i) => `${i.quantity}× ${i.productName}`)
       .join(", ");
@@ -87,6 +87,7 @@ export async function sendOrderStatusEmail(orderId: string): Promise<void> {
       `Merhaba ${order.guestName},`,
       "",
       greeting,
+      `Sipariş No: ${order.orderNo}`,
       `Durum: ${statusTr}`,
       `Ürünler: ${itemLines}`,
       `Toplam: ${formatTryLabel(order.totalCents)}`,
@@ -101,6 +102,7 @@ export async function sendOrderStatusEmail(orderId: string): Promise<void> {
       <p style="margin:0 0 16px;color:#6b5b4f">${order.branch.name}</p>
       <p>Merhaba <strong>${order.guestName}</strong>,</p>
       <p>${greeting}</p>
+      <p>Sipariş No: <strong>${order.orderNo}</strong></p>
       <p style="font-size:18px">Durum: <strong style="color:#b34a1c">${statusTr}</strong></p>
       <p style="color:#4a3f36">${itemLines}</p>
       <p>Toplam: <strong>${formatTryLabel(order.totalCents)}</strong></p>

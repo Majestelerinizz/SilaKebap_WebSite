@@ -5,6 +5,13 @@
   animation: fadeIn 0.45s var(--ease) both;
 }
 
+.pageWide {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 3.5rem;
+  animation: fadeIn 0.45s var(--ease) both;
+}
+
 .top {
   display: flex;
   justify-content: space-between;
@@ -12,18 +19,13 @@
   margin-bottom: 1rem;
 }
 
-.page h1 {
+.page h1,
+.pageWide h1 {
   font-family: var(--font-serif);
   font-size: clamp(1.9rem, 5vw, 2.35rem);
   font-weight: 600;
   letter-spacing: -0.03em;
   margin: 0 0 0.75rem;
-}
-
-.page h2 {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  margin: 1.5rem 0 0.65rem;
 }
 
 .form {
@@ -54,122 +56,8 @@
   box-shadow: 0 8px 22px rgba(255, 107, 53, 0.22);
 }
 
-.status {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: var(--accent);
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  animation: emberPulse 2.8s ease-in-out infinite;
-}
-
 .muted {
   color: var(--muted);
-}
-
-.steps {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0;
-  display: grid;
-  gap: 0.45rem;
-}
-
-.step {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--line);
-  font-size: 0.92rem;
-  background: var(--bg-elevated);
-}
-
-.stepDone {
-  opacity: 0.82;
-  color: var(--muted);
-}
-
-.stepDone .stepDot {
-  background: var(--ok);
-}
-
-.stepCurrent {
-  border-color: var(--accent);
-  background: rgba(255, 107, 53, 0.08);
-  font-weight: 700;
-  color: var(--fg);
-}
-
-.stepDot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: var(--line);
-  flex-shrink: 0;
-}
-
-.stepCurrent .stepDot {
-  background: var(--accent);
-}
-
-.cancelled,
-.pendingPay {
-  margin: 1rem 0 0;
-  padding: 0.85rem 1rem;
-  border-radius: 0.85rem;
-  border: 1px solid var(--line);
-  background: var(--bg-elevated);
-  font-size: 0.95rem;
-}
-
-.cancelled {
-  color: var(--accent-deep);
-  font-weight: 600;
-}
-
-.pendingPay {
-  color: var(--muted);
-}
-
-.list {
-  padding-left: 1.1rem;
-}
-
-.timeline {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 0.65rem;
-}
-
-.timeline li {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 0.85rem;
-  background: var(--bg-elevated);
-  box-shadow: var(--shadow);
-  animation: riseIn 0.45s var(--ease) both;
-}
-
-.timeline span,
-.timeline em {
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-style: normal;
-}
-
-.result {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--line);
-  white-space: pre-wrap;
-  border-radius: 0.85rem;
 }
 
 .lead {
@@ -211,8 +99,292 @@
   color: var(--fg);
 }
 
-@media (max-width: 480px) {
-  .page {
+/* —— Cargo / Trendyol-style card —— */
+.cargoCard {
+  margin-top: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.cargoHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.cargoHeadLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.cargoHeadLeft strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.followBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.orderNoBadge {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.cargoSteps {
+  list-style: none;
+  margin: 0;
+  padding: 1.15rem 1rem 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0.35rem;
+  position: relative;
+}
+
+.cargoStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.cargoStepLabel {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--muted);
+  font-weight: 600;
+  max-width: 7.5rem;
+}
+
+.cargoDot {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: transparent;
+}
+
+.cargoStepDone .cargoDot {
+  border-color: var(--fg);
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.cargoStepCurrent .cargoDot {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #140e0b;
+}
+
+.cargoStepCurrent .cargoStepLabel {
+  color: var(--fg);
+  font-weight: 800;
+}
+
+.cargoStepDone .cargoStepLabel {
+  color: var(--fg);
+}
+
+.shipBanner {
+  margin: 0.35rem 1rem 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.18);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.shipTitle {
+  margin: 0;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.shipMeta {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.shipNo {
+  margin: 0;
+  font-size: 0.86rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.copyBtn {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.15rem 0.35rem;
+}
+
+.statusPill {
+  margin: 0.4rem 0 0;
+  display: inline-flex;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--accent);
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+.productCard {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.productThumb {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  background: rgba(255, 107, 53, 0.12);
+  color: var(--accent);
+}
+
+.productInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.productName {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.productOpts,
+.productQty {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.productPrice {
+  margin: 0.4rem 0 0;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.cargoFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.15rem 1.1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+
+.cargoFooter strong {
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+.cancelled,
+.pendingPay {
+  margin: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-size: 0.95rem;
+}
+
+.cancelled {
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.pendingPay {
+  color: var(--muted);
+}
+
+/* Desktop: yan yana ürün kartları (kategori grid gibi) */
+@media (min-width: 768px) {
+  .pageWide {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .cargoSteps {
+    padding: 1.35rem 1.5rem 1rem;
+  }
+
+  .cargoStepLabel {
+    font-size: 0.8rem;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 1.15rem 1.15rem;
+  }
+
+  /* Tek ürün kalırsa sola yaslanır (1 tanesi düşmüş / wrap hissi) */
+  .productGrid > .productCard:last-child:nth-child(odd) {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1100px) {
+  .productGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mobile: mevcut dikey form + adımlar korunur */
+@media (max-width: 767px) {
+  .page,
+  .pageWide {
+    max-width: 560px;
     padding: 1rem 0.9rem calc(2.5rem + env(safe-area-inset-bottom));
   }
 
@@ -229,5 +401,44 @@
 
   .actions {
     flex-direction: column;
+  }
+
+  .cargoSteps {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .cargoStep {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--line);
+    background: var(--bg);
+  }
+
+  .cargoStepCurrent {
+    border-color: var(--accent);
+    background: rgba(255, 107, 53, 0.08);
+  }
+
+  .cargoStepLabel {
+    max-width: none;
+    font-size: 0.9rem;
+    text-align: left;
+  }
+
+  .shipBanner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .productGrid {
+    grid-template-columns: 1fr;
   }
 }

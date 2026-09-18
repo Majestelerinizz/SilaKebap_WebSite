@@ -1,0 +1,18 @@
+[Unit]
+Description=Sila Kebap Web (customer)
+After=network.target silakebap-api.service
+
+[Service]
+Type=simple
+User=silakebap
+Group=silakebap
+WorkingDirectory=/opt/silakebap
+EnvironmentFile=/opt/silakebap/.env
+Environment=NODE_ENV=production
+Environment=PORT=13100
+ExecStart=/usr/bin/pnpm --filter @silakebap/web start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

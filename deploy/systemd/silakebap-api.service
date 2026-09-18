@@ -1,0 +1,21 @@
+[Unit]
+Description=Sila Kebap API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=silakebap
+Group=silakebap
+WorkingDirectory=/opt/silakebap
+EnvironmentFile=/opt/silakebap/.env
+Environment=NODE_ENV=production
+Environment=API_PORT=14100
+ExecStart=/usr/bin/pnpm --filter @silakebap/api start
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

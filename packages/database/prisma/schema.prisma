@@ -299,6 +299,8 @@ model Order {
   discountCents     Int             @default(0)
   totalCents        Int
   couponId          String?
+  /** Kısa müşteri sipariş no (ör. SK8A3F2B1C) */
+  orderNo           String          @unique
   trackingToken     String          @unique
   customerNote      String?
   createdAt         DateTime        @default(now())
@@ -316,6 +318,7 @@ model Order {
   @@index([branchId])
   @@index([status])
   @@index([trackingToken])
+  @@index([orderNo])
   @@index([courierId])
   @@index([createdAt])
 }

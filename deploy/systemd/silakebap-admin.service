@@ -1,0 +1,18 @@
+[Unit]
+Description=Sila Kebap Admin
+After=network.target silakebap-api.service
+
+[Service]
+Type=simple
+User=silakebap
+Group=silakebap
+WorkingDirectory=/opt/silakebap
+EnvironmentFile=/opt/silakebap/.env
+Environment=NODE_ENV=production
+Environment=PORT=13101
+ExecStart=/usr/bin/pnpm --filter @silakebap/admin start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

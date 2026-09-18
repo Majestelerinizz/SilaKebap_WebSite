@@ -224,7 +224,7 @@ export default function CheckoutPage() {
         window.location.href = data.iyzico.paymentPageUrl as string;
         return;
       }
-      router.push(`/track/${data.order.trackingToken}`);
+      router.push(`/track/${data.order.orderNo ?? data.order.trackingToken}`);
     } catch (err) {
       setError(String(err));
     } finally {
