@@ -1,0 +1,200 @@
+.page {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.header a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.form {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: var(--panel);
+}
+
+.form h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.form input,
+.form select,
+.form button,
+.secondary {
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.form button,
+.card button {
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary {
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: var(--panel);
+}
+
+.card div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.card span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #ff7b7b;
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.hint code {
+  font-size: 0.8rem;
+}
+
+.cardCol {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: var(--panel);
+}
+
+.cardRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.linkish {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.linkish span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.secondaryBtn {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  color: var(--fg) !important;
+}
+
+.expand {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.expand label {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 220px;
+}
+
+.expand input,
+.expand select,
+.expand textarea {
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.nested {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.nested li {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+}
+
+.nested span {
+  color: var(--muted);
+}
+
+.check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: none !important;
+}
+
+.expand h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}

@@ -1,0 +1,23 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: inherit;
+}
+
+.logo {
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--amber-soft), 0 0 0 3px rgba(255, 107, 53, 0.35);
+}
+
+.word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+}
+
+.inverted .word {
+  color: var(--hero-fg);
+}

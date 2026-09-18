@@ -1,0 +1,26 @@
+.btn {
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border-radius: var(--radius-pill);
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: var(--accent-soft);
+}
+
+.btnOnDark {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.btnOnDark:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+}

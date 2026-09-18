@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  RECEIVED
+  PREPARING
+  READY
+  COURIER_ASSIGNED
+  ON_THE_WAY
+  AWAITING_PICKUP
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  IYZICO_ONLINE
+  CASH_ON_DELIVERY
+  CARD_ON_DELIVERY
+  PAY_AT_STORE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  UNPAID
+}
+
+enum FulfillmentType {
+  DELIVERY
+  PICKUP
+}
+
+enum StaffRole {
+  SUPER_ADMIN
+  KITCHEN
+  COURIER
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum OptionGroupType {
+  SIZE
+  EXTRA
+  REMOVABLE
+  COMBO
+  SINGLE
+  MULTI
+}
+
+model Branch {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  phone           String?
+  addressLine1    String
+  addressLine2    String?
+  city            String
+  district        String?
+  timezone        String   @default("Europe/Istanbul")
+  isOpen          Boolean  @default(true)
+  minOrderCents   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deliveryZones    DeliveryZone[]
+  workingHours     WorkingHours[]
+  branchProducts   BranchProduct[]
+  staffMemberships StaffMembership[]
+  orders           Order[]
+  coupons          Coupon[]
+}
+
+model DeliveryZone {
+  id              String   @id @default(cuid())
+  branchId        String
+  name            String
+  /// Neighborhood names (simple list for v1)
+  neighborhoods   String[] @default([])
+  /// Optional GeoJSON polygon as JSON
+  polygon         Json?
+  feeCents        Int      @default(0)
+  minOrderCents   Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  branch Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([branchId])
+}
+
+model WorkingHours {
+  id        String   @id @default(cuid())
+  branchId  String
+  /// 0 = Sunday … 6 = Saturday
+  dayOfWeek Int
+  openTime  String
+  closeTime String
+  isClosed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, dayOfWeek])
+  @@index([branchId])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  phone        String?   @unique
+  name         String?
+  passwordHash String?
+  /// Global flag for SUPER_ADMIN (not branch-scoped)
+  isSuperAdmin Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  staffMemberships StaffMembership[]
+  addresses        Address[]
+  orders           Order[]           @relation("CustomerOrders")
+  assignedOrders   Order[]           @relation("CourierOrders")
+}
+
+model StaffMembership {
+  id        String    @id @default(cuid())
+  userId    String
+  branchId  String
+  role      StaffRole
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId, role])
+  @@index([branchId])
+  @@index([userId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  imageKey    String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  categoryId  String
+  name        String
+  slug        String   @unique
+  description String?
+  imageKey    String?
+  /// Catalog base price (overridden per branch via BranchProduct when present)
+  basePriceCents Int
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category       Category        @relation(fields: [categoryId], references: [id])
+  optionGroups   OptionGroup[]
+  branchProducts BranchProduct[]
+  orderItems     OrderItem[]
+
+  @@index([categoryId])
+}
+
+model OptionGroup {
+  id            String          @id @default(cuid())
+  productId     String
+  name          String
+  type          OptionGroupType
+  minSelect     Int             @default(0)
+  maxSelect     Int             @default(1)
+  isRequired    Boolean         @default(false)
+  sortOrder     Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  product Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  items   OptionItem[]
+
+  @@index([productId])
+}
+
+model OptionItem {
+  id               String   @id @default(cuid())
+  optionGroupId    String
+  name             String
+  priceDeltaCents  Int      @default(0)
+  isDefault        Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  optionGroup      OptionGroup       @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  orderItemOptions OrderItemOption[]
+
+  @@index([optionGroupId])
+}
+
+model BranchProduct {
+  id          String   @id @default(cuid())
+  branchId    String
+  productId   String
+  priceCents  Int
+  isAvailable Boolean  @default(true)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch  Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, productId])
+  @@index([branchId])
+  @@index([productId])
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  label        String?
+  line1        String
+  line2        String?
+  district     String?
+  city         String?
+  neighborhood String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Coupon {
+  id              String     @id @default(cuid())
+  code            String     @unique
+  type            CouponType
+  value           Int
+  branchId        String?
+  minOrderCents   Int        @default(0)
+  maxUses         Int?
+  usedCount       Int        @default(0)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  orders Order[]
+
+  @@index([branchId])
+}
+
+model Order {
+  id                String          @id @default(cuid())
+  branchId          String
+  customerId        String?
+  courierId         String?
+  fulfillmentType   FulfillmentType
+  status            OrderStatus
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus
+  guestName         String
+  guestPhone        String
+  guestEmail        String?
+  deliveryZoneId    String?
+  addressSnapshot   Json?
+  subtotalCents     Int
+  deliveryFeeCents  Int             @default(0)
+  discountCents     Int             @default(0)
+  totalCents        Int
+  couponId          String?
+  trackingToken     String          @unique
+  customerNote      String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  branch       Branch               @relation(fields: [branchId], references: [id])
+  customer     User?                @relation("CustomerOrders", fields: [customerId], references: [id])
+  courier      User?                @relation("CourierOrders", fields: [courierId], references: [id])
+  deliveryZone DeliveryZone?        @relation(fields: [deliveryZoneId], references: [id])
+  coupon       Coupon?              @relation(fields: [couponId], references: [id])
+  items        OrderItem[]
+  payments     Payment[]
+  statusHistory OrderStatusHistory[]
+
+  @@index([branchId])
+  @@index([status])
+  @@index([trackingToken])
+  @@index([courierId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  productId       String
+  productName     String
+  unitPriceCents  Int
+  quantity        Int
+  lineTotalCents  Int
+  note            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  order   Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product           @relation(fields: [productId], references: [id])
+  options OrderItemOption[]
+
+  @@index([orderId])
+}
+
+model OrderItemOption {
+  id               String   @id @default(cuid())
+  orderItemId      String
+  optionItemId     String?
+  name             String
+  priceDeltaCents  Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  orderItem  OrderItem   @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  optionItem OptionItem? @relation(fields: [optionItemId], references: [id], onDelete: SetNull)
+
+  @@index([orderItemId])
+}
+
+model OrderStatusHistory {
+  id         String      @id @default(cuid())
+  orderId    String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  note       String?
+  changedById String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  method            PaymentMethod
+  status            PaymentStatus
+  amountCents       Int
+  provider          String?
+  providerPaymentId String?
+  providerPayload   Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([providerPaymentId])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  url       String?
+  mimeType  String?
+  sizeBytes Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
