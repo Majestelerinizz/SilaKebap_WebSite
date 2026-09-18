@@ -1,56 +1,46 @@
-.page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.topBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.topBar h1 {
-  margin: 0;
-}
-
-.logout {
-  padding: 0.55rem 0.85rem;
-  border-radius: 0.4rem;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--fg);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.nav a {
-  padding: 0.75rem 1rem;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 0.5rem;
-  text-decoration: none;
-}
-
-.branch {
+.grid {
   display: grid;
-  gap: 0.35rem;
-  max-width: 320px;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.85rem;
 }
 
-.branch select {
-  padding: 0.6rem 0.75rem;
-  border-radius: 0.4rem;
+.stat {
+  padding: 1.15rem 1.2rem;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--panel);
-  color: var(--fg);
+  display: grid;
+  gap: 0.45rem;
+  animation: riseIn 0.4s ease both;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stat strong {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 1.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  max-width: 40rem;
+  line-height: 1.5;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

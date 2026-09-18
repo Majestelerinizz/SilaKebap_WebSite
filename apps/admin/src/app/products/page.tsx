@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatTryLabel } from "@silakebap/shared";
+import { AdminShell } from "@/components/AdminShell";
 import {
   apiUrl,
   authHeaders,
@@ -246,14 +246,10 @@ export default function ProductsPage() {
   }
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Ürünler</h1>
-        <Link href="/dashboard">Yönetim</Link>
-      </header>
-      <p className={styles.hint}>
-        Aktif şube: <code>{branchId || "—"}</code> (dashboard’dan değişir)
-      </p>
+    <AdminShell
+      title="Ürünler"
+      subtitle={`Aktif şube: ${branchId || "—"}`}
+    >
       {error ? <p className={styles.error}>{error}</p> : null}
       {msg ? <p className={styles.ok}>{msg}</p> : null}
 
@@ -456,6 +452,6 @@ export default function ProductsPage() {
           );
         })}
       </ul>
-    </main>
+    </AdminShell>
   );
 }

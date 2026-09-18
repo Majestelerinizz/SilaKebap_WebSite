@@ -10,6 +10,7 @@ import {
   fulfillmentLabel,
   orderStatusLabel,
 } from "@silakebap/shared";
+import { BrandMark } from "@/components/BrandMark";
 import {
   apiUrl,
   authHeaders,
@@ -19,15 +20,17 @@ import {
   readStaff,
   readToken,
 } from "@/lib/auth";
-import styles from "../panel.module.css";
+import styles from "./kitchen.module.css";
 
 type OrderRow = {
   id: string;
+  orderNo?: string;
   status: string;
   guestName: string;
   guestPhone: string;
   fulfillmentType: string;
   totalCents: number;
+  createdAt?: string;
   items: Array<{
     productName: string;
     quantity: number;
@@ -42,11 +45,16 @@ const HIDDEN_STATUSES = new Set<string>([
   OrderStatus.PENDING_PAYMENT,
 ]);
 
-const KITCHEN_SECTIONS: Array<{ title: string; statuses: string[] }> = [
-  { title: "Yeni", statuses: [OrderStatus.RECEIVED] },
-  { title: "Hazırlanıyor", statuses: [OrderStatus.PREPARING] },
+const KITCHEN_SECTIONS: Array<{
+  title: string;
+  tone: "new" | "prep" | "ready";
+  statuses: string[];
+}> = [
+  { title: "Yeni", tone: "new", statuses: [OrderStatus.RECEIVED] },
+  { title: "Hazırlanıyor", tone: "prep", statuses: [OrderStatus.PREPARING] },
   {
     title: "Hazır",
+    tone: "ready",
     statuses: [OrderStatus.READY, OrderStatus.AWAITING_PICKUP],
   },
 ];
@@ -67,22 +75,29 @@ function OrderCard({
   return (
     <li className={styles.card}>
       <div className={styles.cardTop}>
-        <strong>
-          {order.guestName} · {order.guestPhone}
-        </strong>
-        <span>{orderStatusLabel(order.status)}</span>
+        <div>
+          <p className={styles.orderNo}>{order.orderNo ?? order.id.slice(-8)}</p>
+          <strong className={styles.guest}>{order.guestName}</strong>
+        </div>
+        <span className={styles.badge}>{orderStatusLabel(order.status)}</span>
       </div>
-      <p>
-        {fulfillmentLabel(order.fulfillmentType)} · {formatTryLabel(order.totalCents)}
+      <p className={styles.meta}>
+        {fulfillmentLabel(order.fulfillmentType)} ·{" "}
+        {formatTryLabel(order.totalCents)}
       </p>
       <ul className={styles.items}>
         {order.items.map((item, idx) => (
           <li key={`${order.id}-${idx}`}>
-            {item.quantity}× {item.productName}
-            {item.options.length
-              ? ` — ${item.options.map((x) => x.name).join(", ")}`
-              : ""}
-            {item.note ? ` [${item.note}]` : ""}
+            <span className={styles.qty}>{item.quantity}×</span>
+            <span>
+              {item.productName}
+              {item.options.length
+                ? ` — ${item.options.map((x) => x.name).join(", ")}`
+                : ""}
+              {item.note ? (
+                <em className={styles.note}> [{item.note}]</em>
+              ) : null}
+            </span>
           </li>
         ))}
       </ul>
@@ -90,6 +105,7 @@ function OrderCard({
         {order.status === OrderStatus.RECEIVED ? (
           <button
             type="button"
+            className={styles.primary}
             onClick={() => onSetStatus(order.id, OrderStatus.PREPARING)}
           >
             Hazırlanıyor
@@ -98,6 +114,7 @@ function OrderCard({
         {order.status === OrderStatus.PREPARING ? (
           <button
             type="button"
+            className={styles.primary}
             onClick={() => onSetStatus(order.id, OrderStatus.READY)}
           >
             Hazır
@@ -107,6 +124,7 @@ function OrderCard({
         order.fulfillmentType === "PICKUP" ? (
           <button
             type="button"
+            className={styles.primary}
             onClick={() => onSetStatus(order.id, OrderStatus.AWAITING_PICKUP)}
           >
             Teslime hazır
@@ -115,6 +133,7 @@ function OrderCard({
         {order.status === OrderStatus.AWAITING_PICKUP ? (
           <button
             type="button"
+            className={styles.ok}
             onClick={() => onSetStatus(order.id, OrderStatus.DELIVERED)}
           >
             Teslim edildi
@@ -201,39 +220,90 @@ export default function KitchenPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div>
-          <h1>Mutfak</h1>
-          <div className={styles.headerLinks}>
-            <Link href="/dashboard">Yönetim</Link>
-            <button type="button" onClick={onLogout}>
-              Çıkış
-            </button>
+        <div className={styles.brandRow}>
+          <BrandMark size="sm" showWordmark={false} />
+          <div>
+            <h1>Mutfak</h1>
+            <div className={styles.headerLinks}>
+              <Link href="/dashboard">Yönetim</Link>
+              <button type="button" onClick={onLogout}>
+                Çıkış
+              </button>
+            </div>
           </div>
         </div>
-        <button type="button" onClick={() => branchId && load(branchId)}>
-          Yenile
-        </button>
+        <div className={styles.headerRight}>
+          <span className={styles.count}>{visibleOrders.length} aktif</span>
+          <button
+            type="button"
+            className={styles.refresh}
+            onClick={() => branchId && load(branchId)}
+          >
+            Yenile
+          </button>
+        </div>
       </header>
+
       {error ? <p className={styles.error}>{error}</p> : null}
-      {KITCHEN_SECTIONS.map((section) => {
-        const sectionOrders = visibleOrders.filter((o) =>
-          section.statuses.includes(o.status),
-        );
-        if (!sectionOrders.length) return null;
-        return (
-          <section key={section.title} className={styles.section}>
-            <h2 className={styles.sectionTitle}>{section.title}</h2>
-            <ul className={styles.list}>
-              {sectionOrders.map((o) => (
-                <OrderCard key={o.id} order={o} onSetStatus={setStatus} />
-              ))}
-            </ul>
-          </section>
-        );
-      })}
-      {!visibleOrders.length && !error ? (
-        <p className={styles.empty}>Aktif mutfak siparişi yok.</p>
-      ) : null}
+
+      {/* Desktop / TV: kanban */}
+      <div className={styles.board}>
+        {KITCHEN_SECTIONS.map((section) => {
+          const sectionOrders = visibleOrders.filter((o) =>
+            section.statuses.includes(o.status),
+          );
+          return (
+            <section
+              key={section.title}
+              className={`${styles.column} ${styles[section.tone]}`}
+            >
+              <header className={styles.colHead}>
+                <h2>{section.title}</h2>
+                <span>{sectionOrders.length}</span>
+              </header>
+              {sectionOrders.length ? (
+                <ul className={styles.list}>
+                  {sectionOrders.map((o) => (
+                    <OrderCard key={o.id} order={o} onSetStatus={setStatus} />
+                  ))}
+                </ul>
+              ) : (
+                <p className={styles.colEmpty}>Boş</p>
+              )}
+            </section>
+          );
+        })}
+      </div>
+
+      {/* Mobile: stacked sections */}
+      <div className={styles.queue}>
+        {visibleOrders.length ? (
+          KITCHEN_SECTIONS.map((section) => {
+            const sectionOrders = visibleOrders.filter((o) =>
+              section.statuses.includes(o.status),
+            );
+            if (!sectionOrders.length) return null;
+            return (
+              <section
+                key={section.title}
+                className={`${styles.queueSection} ${styles[section.tone]}`}
+              >
+                <header className={styles.queueHead}>
+                  <h2>{section.title}</h2>
+                  <span>{sectionOrders.length}</span>
+                </header>
+                <ul className={styles.list}>
+                  {sectionOrders.map((o) => (
+                    <OrderCard key={o.id} order={o} onSetStatus={setStatus} />
+                  ))}
+                </ul>
+              </section>
+            );
+          })
+        ) : !error ? (
+          <p className={styles.empty}>Aktif mutfak siparişi yok.</p>
+        ) : null}
+      </div>
     </main>
   );
 }

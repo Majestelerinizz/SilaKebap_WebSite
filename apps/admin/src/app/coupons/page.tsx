@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AdminShell } from "@/components/AdminShell";
 import { apiUrl, authHeaders, defaultBranchId, readStaff } from "@/lib/auth";
 import styles from "../adminForms.module.css";
 
@@ -72,11 +72,7 @@ export default function CouponsPage() {
   }
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Kuponlar</h1>
-        <Link href="/dashboard">Yönetim</Link>
-      </header>
+    <AdminShell title="Kuponlar" subtitle="İndirim kodları">
       {error ? <p className={styles.error}>{error}</p> : null}
       <form className={styles.form} onSubmit={create}>
         <input
@@ -112,6 +108,6 @@ export default function CouponsPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </AdminShell>
   );
 }

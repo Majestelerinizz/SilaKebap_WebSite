@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatTryLabel } from "@silakebap/shared";
+import { AdminShell } from "@/components/AdminShell";
 import {
   apiUrl,
   authHeaders,
@@ -111,11 +111,7 @@ export default function ZonesPage() {
   }
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Bölgeler / Saat</h1>
-        <Link href="/dashboard">Yönetim</Link>
-      </header>
+    <AdminShell title="Bölgeler / Saat" subtitle="Teslimat ve çalışma saatleri">
       {error ? <p className={styles.error}>{error}</p> : null}
 
       <button type="button" className={styles.secondary} onClick={toggleOpen}>
@@ -157,7 +153,9 @@ export default function ZonesPage() {
         ))}
       </ul>
 
-      <h2>Çalışma saatleri</h2>
+      <h2 style={{ marginTop: "1.5rem", fontSize: "1.05rem" }}>
+        Çalışma saatleri
+      </h2>
       <ul className={styles.list}>
         {hours.map((h) => (
           <li key={h.id} className={styles.card}>
@@ -174,6 +172,6 @@ export default function ZonesPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </AdminShell>
   );
 }

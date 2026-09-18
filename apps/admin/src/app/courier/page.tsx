@@ -9,6 +9,7 @@ import {
   formatTryLabel,
   orderStatusLabel,
 } from "@silakebap/shared";
+import { BrandMark } from "@/components/BrandMark";
 import {
   apiUrl,
   authHeaders,
@@ -18,16 +19,22 @@ import {
   readStaff,
   readToken,
 } from "@/lib/auth";
-import styles from "../panel.module.css";
+import styles from "./courier.module.css";
 
 type OrderRow = {
   id: string;
+  orderNo?: string;
   status: string;
   guestName: string;
   guestPhone: string;
   fulfillmentType: string;
   totalCents: number;
-  addressSnapshot: { line1?: string } | null;
+  addressSnapshot: {
+    line1?: string;
+    district?: string;
+    city?: string;
+    note?: string;
+  } | null;
   items: Array<{ productName: string; quantity: number }>;
 };
 
@@ -35,6 +42,12 @@ function resolveBranchId(): string {
   const saved = localStorage.getItem("silakebap.selectedBranchId");
   if (saved) return saved;
   return defaultBranchId(readStaff());
+}
+
+function addressLine(o: OrderRow): string {
+  const a = o.addressSnapshot;
+  if (!a) return "Adres yok";
+  return [a.line1, a.district, a.city].filter(Boolean).join(", ") || "Adres yok";
 }
 
 export default function CourierPage() {
@@ -115,39 +128,55 @@ export default function CourierPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div>
-          <h1>Kurye</h1>
-          <div className={styles.headerLinks}>
-            <Link href="/dashboard">Yönetim</Link>
-            <button type="button" onClick={onLogout}>
-              Çıkış
-            </button>
+        <div className={styles.brandRow}>
+          <BrandMark size="sm" showWordmark={false} />
+          <div>
+            <h1>Kurye</h1>
+            <div className={styles.headerLinks}>
+              <Link href="/dashboard">Yönetim</Link>
+              <button type="button" onClick={onLogout}>
+                Çıkış
+              </button>
+            </div>
           </div>
         </div>
-        <button type="button" onClick={() => branchId && load(branchId)}>
+        <button
+          type="button"
+          className={styles.refresh}
+          onClick={() => branchId && load(branchId)}
+        >
           Yenile
         </button>
       </header>
+
       {error ? <p className={styles.error}>{error}</p> : null}
       {!orders.length && !error ? (
-        <p className={styles.empty}>Teslimata hazır kurye siparişi yok.</p>
+        <p className={styles.empty}>Teslimata hazır sipariş yok.</p>
       ) : null}
+
       <ul className={styles.list}>
         {orders.map((o) => (
           <li key={o.id} className={styles.card}>
             <div className={styles.cardTop}>
-              <strong>
-                {o.guestName} ·{" "}
-                <a className={styles.phoneLink} href={`tel:${o.guestPhone}`}>
-                  {o.guestPhone}
-                </a>
-              </strong>
-              <span>{orderStatusLabel(o.status)}</span>
+              <div>
+                <p className={styles.orderNo}>{o.orderNo ?? o.id.slice(-8)}</p>
+                <strong>{o.guestName}</strong>
+              </div>
+              <span className={styles.badge}>{orderStatusLabel(o.status)}</span>
             </div>
-            <p>{formatTryLabel(o.totalCents)}</p>
-            {o.addressSnapshot?.line1 ? (
-              <p className={styles.addr}>{o.addressSnapshot.line1}</p>
+
+            <p className={styles.addr}>{addressLine(o)}</p>
+            {o.addressSnapshot?.note ? (
+              <p className={styles.addrNote}>{o.addressSnapshot.note}</p>
             ) : null}
+
+            <div className={styles.callRow}>
+              <a className={styles.call} href={`tel:${o.guestPhone}`}>
+                Ara · {o.guestPhone}
+              </a>
+              <span className={styles.total}>{formatTryLabel(o.totalCents)}</span>
+            </div>
+
             <ul className={styles.items}>
               {o.items.map((item, idx) => (
                 <li key={`${o.id}-${idx}`}>
@@ -155,29 +184,33 @@ export default function CourierPage() {
                 </li>
               ))}
             </ul>
+
             <div className={styles.actions}>
               {o.status === OrderStatus.READY ? (
                 <button
                   type="button"
+                  className={styles.primary}
                   onClick={() => setStatus(o.id, OrderStatus.COURIER_ASSIGNED)}
                 >
-                  Üstlen
+                  Aldım
                 </button>
               ) : null}
               {o.status === OrderStatus.COURIER_ASSIGNED ? (
                 <button
                   type="button"
+                  className={styles.primary}
                   onClick={() => setStatus(o.id, OrderStatus.ON_THE_WAY)}
                 >
-                  Yolda
+                  Yoldayım
                 </button>
               ) : null}
               {o.status === OrderStatus.ON_THE_WAY ? (
                 <button
                   type="button"
+                  className={styles.ok}
                   onClick={() => setStatus(o.id, OrderStatus.DELIVERED)}
                 >
-                  Teslim edildi
+                  Teslim
                 </button>
               ) : null}
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AdminShell } from "@/components/AdminShell";
 import { apiUrl, authHeaders } from "@/lib/auth";
 import styles from "../adminForms.module.css";
 
@@ -64,15 +64,11 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Entegrasyonlar</h1>
-        <Link href="/dashboard">Yönetim</Link>
-      </header>
+    <AdminShell title="Entegrasyonlar" subtitle="Ödeme, e-posta, depolama">
       {error ? <p className={styles.error}>{error}</p> : null}
       {msg ? <p className={styles.ok}>{msg}</p> : null}
       {!data ? (
-        <p>Yükleniyor…</p>
+        <p className={styles.hint}>Yükleniyor…</p>
       ) : (
         <ul className={styles.list}>
           <li className={styles.cardCol}>
@@ -82,10 +78,12 @@ export default function IntegrationsPage() {
               {data.iyzico.mode}
             </span>
             <span className={styles.hint}>{data.iyzico.baseUrl}</span>
-            <span className={styles.hint}>Callback: {data.iyzico.callbackUrl}</span>
+            <span className={styles.hint}>
+              Callback: {data.iyzico.callbackUrl}
+            </span>
             <p className={styles.hint}>
-              Sandbox key’leri `.env` içine `IYZICO_API_KEY` / `IYZICO_SECRET_KEY`
-              olarak ekleyin. Key yokken checkout stub sayfasına yönlendirir.
+              Sandbox key’leri Doppler / `.env` içinde `IYZICO_API_KEY` /
+              `IYZICO_SECRET_KEY`. Key yokken checkout stub’a yönlendirir.
             </p>
           </li>
           <li className={styles.cardCol}>
@@ -121,6 +119,6 @@ export default function IntegrationsPage() {
           </li>
         </ul>
       )}
-    </main>
+    </AdminShell>
   );
 }

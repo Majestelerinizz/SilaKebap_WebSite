@@ -1,115 +1,100 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { AdminShell } from "@/components/AdminShell";
 import {
   apiUrl,
   authHeaders,
-  clearSession,
   defaultBranchId,
   readStaff,
   type StaffUser,
 } from "@/lib/auth";
 import styles from "./page.module.css";
 
-type NavLink = { href: string; label: string };
-
-function navLinksFor(staff: StaffUser): NavLink[] {
-  if (staff.isSuperAdmin) {
-    return [
-      { href: "/kitchen", label: "Mutfak" },
-      { href: "/courier", label: "Kurye" },
-      { href: "/products", label: "Ürünler" },
-      { href: "/zones", label: "Bölgeler / Saat" },
-      { href: "/coupons", label: "Kuponlar" },
-      { href: "/orders", label: "Siparişler" },
-      { href: "/integrations", label: "Entegrasyonlar" },
-    ];
-  }
-
-  const roles = new Set(staff.memberships.map((m) => m.role));
-  const links: NavLink[] = [];
-  if (roles.has("KITCHEN")) {
-    links.push({ href: "/kitchen", label: "Mutfak" });
-  }
-  if (roles.has("COURIER")) {
-    links.push({ href: "/courier", label: "Kurye" });
-  }
-  return links;
-}
-
 export default function DashboardPage() {
-  const router = useRouter();
-  const [info, setInfo] = useState("");
-  const [branchId, setBranchId] = useState("");
   const [staff, setStaff] = useState<StaffUser | null>(null);
-  const [branches, setBranches] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
-
-  const navLinks = useMemo(
-    () => (staff ? navLinksFor(staff) : []),
-    [staff],
-  );
+  const [stats, setStats] = useState({
+    openOrders: 0,
+    products: 0,
+    coupons: 0,
+  });
 
   useEffect(() => {
     const s = readStaff();
-    if (!s) {
-      setInfo("Önce giriş yapın");
-      return;
-    }
     setStaff(s);
-    setInfo(
-      `${s.name ?? s.email} · ${s.isSuperAdmin ? "SUPER_ADMIN" : s.memberships.map((m) => m.role).join(", ")}`,
-    );
-    setBranchId(defaultBranchId(s));
-    if (s.isSuperAdmin) {
-      void fetch(`${apiUrl}/api/catalog/branches`, { headers: authHeaders() })
-        .then((r) => r.json())
-        .then((d) => setBranches(d.branches ?? []));
+    const branchId =
+      localStorage.getItem("silakebap.selectedBranchId") ||
+      defaultBranchId(s);
+
+    async function load() {
+      try {
+        const [oRes, pRes, cRes] = await Promise.all([
+          branchId
+            ? fetch(`${apiUrl}/api/orders/branch/${branchId}`, {
+                headers: authHeaders(),
+              })
+            : Promise.resolve(null),
+          s?.isSuperAdmin
+            ? fetch(`${apiUrl}/api/admin/products`, { headers: authHeaders() })
+            : Promise.resolve(null),
+          s?.isSuperAdmin
+            ? fetch(`${apiUrl}/api/admin/coupons`, { headers: authHeaders() })
+            : Promise.resolve(null),
+        ]);
+        const next = { openOrders: 0, products: 0, coupons: 0 };
+        if (oRes?.ok) {
+          const d = await oRes.json();
+          next.openOrders = (d.orders as unknown[] | undefined)?.length ?? 0;
+        }
+        if (pRes?.ok) {
+          const d = await pRes.json();
+          next.products = (d.products as unknown[] | undefined)?.length ?? 0;
+        }
+        if (cRes?.ok) {
+          const d = await cRes.json();
+          next.coupons = (d.coupons as unknown[] | undefined)?.length ?? 0;
+        }
+        setStats(next);
+      } catch {
+        /* ignore summary errors */
+      }
     }
+    void load();
   }, []);
 
-  function onLogout() {
-    clearSession();
-    router.push("/login");
-  }
+  const role = staff
+    ? staff.isSuperAdmin
+      ? "Süper admin"
+      : staff.memberships.map((m) => m.role).join(", ")
+    : "…";
 
   return (
-    <main className={styles.page}>
-      <div className={styles.topBar}>
-        <h1>Yönetim</h1>
-        <button type="button" className={styles.logout} onClick={onLogout}>
-          Çıkış
-        </button>
+    <AdminShell
+      title="Özet"
+      subtitle={`${staff?.name ?? staff?.email ?? ""} · ${role}`}
+    >
+      <div className={styles.grid}>
+        <article className={styles.stat}>
+          <span>Açık sipariş</span>
+          <strong>{stats.openOrders}</strong>
+        </article>
+        {staff?.isSuperAdmin ? (
+          <>
+            <article className={styles.stat}>
+              <span>Ürün</span>
+              <strong>{stats.products}</strong>
+            </article>
+            <article className={styles.stat}>
+              <span>Kupon</span>
+              <strong>{stats.coupons}</strong>
+            </article>
+          </>
+        ) : null}
       </div>
-      <p>{info}</p>
-      {branches.length > 0 ? (
-        <label className={styles.branch}>
-          Şube
-          <select
-            value={branchId}
-            onChange={(e) => {
-              setBranchId(e.target.value);
-              localStorage.setItem("silakebap.selectedBranchId", e.target.value);
-            }}
-          >
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-      <nav className={styles.nav}>
-        {navLinks.map((link) => (
-          <Link key={link.href} href={link.href}>
-            {link.label}
-          </Link>
-        ))}
-      </nav>
-    </main>
+      <p className={styles.hint}>
+        Sol menüden (mobilde alt bardan) sipariş, ürün ve operasyon ekranlarına
+        geç. Mutfak ve kurye dokunmatik / telefon için ayrı optimize edildi.
+      </p>
+    </AdminShell>
   );
 }
