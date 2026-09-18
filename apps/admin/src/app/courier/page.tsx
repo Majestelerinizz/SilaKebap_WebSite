@@ -66,6 +66,11 @@ export default function CourierPage() {
       ),
     );
     const data = await res.json();
+    if (res.status === 401) {
+      clearSession();
+      router.replace("/login");
+      return;
+    }
     if (!res.ok) {
       setError(data.error ?? "Failed");
       return;
@@ -74,12 +79,13 @@ export default function CourierPage() {
       (data.orders as OrderRow[]).filter((o) => o.fulfillmentType === "DELIVERY"),
     );
     setError("");
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const staff = readStaff();
     if (!readToken() || !staff) {
-      setError("Önce giriş yapın");
+      clearSession();
+      router.replace("/login");
       return;
     }
     setCourierId(staff.id);
@@ -88,7 +94,7 @@ export default function CourierPage() {
       setBranchId(bid);
       void load(bid);
     }
-  }, [load]);
+  }, [load, router]);
 
   useEffect(() => {
     if (!branchId) return;
@@ -112,6 +118,11 @@ export default function CourierPage() {
         }),
       }),
     );
+    if (res.status === 401) {
+      clearSession();
+      router.replace("/login");
+      return;
+    }
     if (!res.ok) {
       const data = await res.json();
       setError(data.error ?? "Status update failed");

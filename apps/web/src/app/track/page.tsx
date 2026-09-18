@@ -39,7 +39,7 @@ export default function TrackPage() {
         />
         <button type="submit">Getir</button>
       </form>
-      <Link href="/" className={styles.homeBtn}>
+      <Link href="/" className={styles.homeBtnGhost}>
         Ana sayfaya dön
       </Link>
     </main>

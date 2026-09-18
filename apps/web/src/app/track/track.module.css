@@ -99,6 +99,10 @@
   color: var(--fg);
 }
 
+.form + .homeBtnGhost {
+  margin-top: 0.85rem;
+}
+
 /* —— Cargo / Trendyol-style card —— */
 .cargoCard {
   margin-top: 0.5rem;

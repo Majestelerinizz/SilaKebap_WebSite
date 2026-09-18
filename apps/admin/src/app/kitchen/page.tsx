@@ -163,17 +163,23 @@ export default function KitchenPage() {
       }),
     );
     const data = await res.json();
+    if (res.status === 401) {
+      clearSession();
+      router.replace("/login");
+      return;
+    }
     if (!res.ok) {
       setError(data.error ?? "Failed");
       return;
     }
     setOrders(data.orders);
     setError("");
-  }, []);
+  }, [router]);
 
   useEffect(() => {
-    if (!readToken()) {
-      setError("Önce giriş yapın");
+    if (!readToken() || !readStaff()) {
+      clearSession();
+      router.replace("/login");
       return;
     }
     const bid = resolveBranchId();
@@ -183,7 +189,7 @@ export default function KitchenPage() {
     }
     setBranchId(bid);
     void load(bid);
-  }, [load]);
+  }, [load, router]);
 
   useEffect(() => {
     if (!branchId) return;
@@ -204,6 +210,11 @@ export default function KitchenPage() {
         body: JSON.stringify({ status }),
       }),
     );
+    if (res.status === 401) {
+      clearSession();
+      router.replace("/login");
+      return;
+    }
     if (!res.ok) {
       const data = await res.json();
       setError(data.error ?? "Status update failed");
