@@ -1,5 +1,6 @@
 import { env } from "../config/env.js";
 import type { Order, OrderItem, OrderItemOption } from "@silakebap/database";
+import { prisma } from "@silakebap/database";
 import { HttpError } from "../middleware/errorHandler.js";
 import Iyzipay from "iyzipay";
 
@@ -11,8 +12,19 @@ type OrderWithItems = Order & {
 type IyzicoStartResult = {
   paymentPageUrl?: string;
   token?: string;
-  mode: "live" | "sandbox-stub";
+  mode: "sandbox" | "sandbox-stub";
 };
+
+function addressFromOrder(order: OrderWithItems) {
+  const snap = order.addressSnapshot as
+    | { line1?: string; city?: string; district?: string }
+    | null
+    | undefined;
+  return {
+    line: snap?.line1 || order.branchId,
+    city: snap?.city || "Istanbul",
+  };
+}
 
 /**
  * Starts iyzico Checkout Form. Without API keys, returns a stub URL for local dev.
@@ -34,6 +46,8 @@ export async function startIyzicoPayment(
     uri: env.IYZICO_BASE_URL,
   });
 
+  const addr = addressFromOrder(order);
+
   const request = {
     locale: "tr",
     conversationId: order.id,
@@ -51,22 +65,22 @@ export async function startIyzicoPayment(
       gsmNumber: order.guestPhone,
       email: order.guestEmail || "musteri@silakebap.local",
       identityNumber: "11111111111",
-      registrationAddress: "N/A",
+      registrationAddress: addr.line,
       ip: "85.34.78.112",
-      city: "Istanbul",
+      city: addr.city,
       country: "Turkey",
     },
     shippingAddress: {
       contactName: order.guestName,
-      city: "Istanbul",
+      city: addr.city,
       country: "Turkey",
-      address: "N/A",
+      address: addr.line,
     },
     billingAddress: {
       contactName: order.guestName,
-      city: "Istanbul",
+      city: addr.city,
       country: "Turkey",
-      address: "N/A",
+      address: addr.line,
     },
     basketItems: order.items.map((item) => ({
       id: item.id,
@@ -89,7 +103,7 @@ export async function startIyzicoPayment(
   }
 
   return {
-    mode: "live",
+    mode: "sandbox",
     token: String(result.token ?? ""),
     paymentPageUrl: String(result.paymentPageUrl ?? ""),
   };
@@ -98,6 +112,8 @@ export async function startIyzicoPayment(
 export async function completeIyzicoPayment(token: string): Promise<{
   success: boolean;
   orderId?: string;
+  paidPriceCents?: number;
+  orderTotalCents?: number;
   raw?: unknown;
 }> {
   if (!env.IYZICO_API_KEY || !env.IYZICO_SECRET_KEY) {
@@ -120,10 +136,32 @@ export async function completeIyzicoPayment(token: string): Promise<{
     });
   });
 
-  const success = result.status === "success" && result.paymentStatus === "SUCCESS";
+  const success =
+    result.status === "success" && result.paymentStatus === "SUCCESS";
+  const orderId = result.conversationId
+    ? String(result.conversationId)
+    : undefined;
+
+  let orderTotalCents: number | undefined;
+  if (orderId) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { totalCents: true },
+    });
+    orderTotalCents = order?.totalCents;
+  }
+
+  const paidRaw = result.paidPrice ?? result.price;
+  const paidPriceCents =
+    paidRaw != null
+      ? Math.round(Number(paidRaw) * 100)
+      : undefined;
+
   return {
     success,
-    orderId: result.conversationId ? String(result.conversationId) : undefined,
+    orderId,
+    paidPriceCents,
+    orderTotalCents,
     raw: result,
   };
 }

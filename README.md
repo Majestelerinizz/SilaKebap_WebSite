@@ -64,6 +64,7 @@ Kupon: `HOSGELDIN10`
 
 ## Dokümantasyon
 
+- [STATUS.md](./STATUS.md) — v1 ~%95 durumu + senin yapacakların
 - [DOPPLER.md](./DOPPLER.md) — secrets (local + VPS)
 - [DEPLOY.md](./DEPLOY.md) — VPS + Let’s Encrypt + smoke checklist
 - [INTEGRATIONS.md](./INTEGRATIONS.md) — iyzico / SMTP / R2

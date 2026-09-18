@@ -15,3 +15,5 @@ coverage
 doppler.yaml
 .doppler
 **/doppler.env
+
+*.tsbuildinfo

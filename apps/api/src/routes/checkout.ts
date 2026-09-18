@@ -8,10 +8,11 @@ import {
 import { startIyzicoPayment } from "../services/iyzicoService.js";
 import { sendOrderStatusEmail } from "../services/emailService.js";
 import { emitOrderCreated } from "../realtime/emit.js";
+import { checkoutRateLimiter } from "../middleware/rateLimit.js";
 
 export const checkoutRouter = Router();
 
-checkoutRouter.post("/quote", async (req, res, next) => {
+checkoutRouter.post("/quote", checkoutRateLimiter, async (req, res, next) => {
   try {
     const input = parseCheckoutBody(req.body);
     const priced = await priceCheckout(input);
@@ -27,7 +28,7 @@ checkoutRouter.post("/quote", async (req, res, next) => {
   }
 });
 
-checkoutRouter.post("/", async (req, res, next) => {
+checkoutRouter.post("/", checkoutRateLimiter, async (req, res, next) => {
   try {
     const input = parseCheckoutBody(req.body);
     const priced = await priceCheckout(input);

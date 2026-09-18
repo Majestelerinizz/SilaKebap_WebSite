@@ -4,6 +4,27 @@
   padding: 2rem;
 }
 
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topBar h1 {
+  margin: 0;
+}
+
+.logout {
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .nav {
   display: flex;
   flex-wrap: wrap;

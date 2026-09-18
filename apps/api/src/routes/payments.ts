@@ -8,6 +8,8 @@ import { HttpError } from "../middleware/errorHandler.js";
 import { completeIyzicoPayment } from "../services/iyzicoService.js";
 import { sendOrderStatusEmail } from "../services/emailService.js";
 import { emitOrderCreated } from "../realtime/emit.js";
+import { paymentCallbackRateLimiter } from "../middleware/rateLimit.js";
+import { env } from "../config/env.js";
 
 export const paymentsRouter = Router();
 
@@ -16,7 +18,7 @@ export const paymentsRouter = Router();
  * Accepts JSON or form-urlencoded token from iyzico redirect.
  * Dev without keys: POST { orderId, simulateSuccess: true }.
  */
-paymentsRouter.post("/iyzico/callback", async (req, res, next) => {
+paymentsRouter.post("/iyzico/callback", paymentCallbackRateLimiter, async (req, res, next) => {
   try {
     const token =
       (req.body?.token as string | undefined) ??
@@ -32,8 +34,15 @@ paymentsRouter.post("/iyzico/callback", async (req, res, next) => {
       if (!result.success) {
         throw new HttpError(400, "Payment not successful", result);
       }
+      if (
+        result.paidPriceCents != null &&
+        result.orderTotalCents != null &&
+        result.paidPriceCents !== result.orderTotalCents
+      ) {
+        throw new HttpError(400, "Paid amount mismatch");
+      }
     } else if (simulateSuccess && orderId) {
-      if (process.env.NODE_ENV === "production") {
+      if (env.NODE_ENV === "production") {
         throw new HttpError(403, "Simulation disabled in production");
       }
       resolvedOrderId = orderId;
@@ -53,9 +62,7 @@ paymentsRouter.post("/iyzico/callback", async (req, res, next) => {
 
     if (order.status !== OrderStatus.PENDING_PAYMENT) {
       if (req.accepts("html")) {
-        res.redirect(
-          `${process.env.WEB_ORIGIN ?? "http://localhost:3000"}/track/${order.trackingToken}`,
-        );
+        res.redirect(`${env.WEB_ORIGIN}/track/${order.trackingToken}`);
         return;
       }
       res.json({ ok: true, orderId: order.id, status: order.status });
@@ -76,8 +83,18 @@ paymentsRouter.post("/iyzico/callback", async (req, res, next) => {
         data: {
           status: PaymentStatus.PAID,
           providerPaymentId: token ?? `sim_${Date.now()}`,
+          providerPayload: {
+            confirmedAt: new Date().toISOString(),
+            source: token ? "iyzico-callback" : "simulate",
+          },
         },
       });
+      if (order.couponId) {
+        await tx.coupon.update({
+          where: { id: order.couponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
       await tx.orderStatusHistory.create({
         data: {
           orderId: order.id,
@@ -93,9 +110,7 @@ paymentsRouter.post("/iyzico/callback", async (req, res, next) => {
     emitOrderCreated(req.app.get("io"), updated);
 
     if (req.accepts("html") && !simulateSuccess) {
-      res.redirect(
-        `${process.env.WEB_ORIGIN ?? "http://localhost:3000"}/track/${updated.trackingToken}`,
-      );
+      res.redirect(`${env.WEB_ORIGIN}/track/${updated.trackingToken}`);
       return;
     }
 

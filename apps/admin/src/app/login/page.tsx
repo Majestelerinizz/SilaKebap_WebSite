@@ -2,17 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiUrl, saveSession, type StaffUser } from "@/lib/auth";
 import styles from "./login.module.css";
-
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
-type StaffUser = {
-  id: string;
-  email: string | null;
-  name: string | null;
-  isSuperAdmin: boolean;
-  memberships: Array<{ branchId: string; role: string }>;
-};
 
 function redirectFor(user: StaffUser): string {
   if (user.isSuperAdmin) return "/dashboard";
@@ -24,8 +15,8 @@ function redirectFor(user: StaffUser): string {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("mutfak@silakebap.local");
-  const [password, setPassword] = useState("Kitchen123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
@@ -41,8 +32,11 @@ export default function LoginPage() {
       setError(data.error ?? "Login failed");
       return;
     }
-    localStorage.setItem("silakebap.accessToken", data.accessToken);
-    localStorage.setItem("silakebap.staff", JSON.stringify(data.user));
+    saveSession(
+      data.accessToken as string,
+      data.refreshToken as string,
+      data.user as StaffUser,
+    );
     router.push(redirectFor(data.user as StaffUser));
   }
 

@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { OrderStatus, formatTryLabel } from "@silakebap/shared";
+import {
+  OrderStatus,
+  formatTryLabel,
+  orderStatusLabel,
+} from "@silakebap/shared";
 import {
   apiUrl,
   authHeaders,
+  clearSession,
   defaultBranchId,
+  ensureApiAuth,
   readStaff,
   readToken,
 } from "@/lib/auth";
@@ -31,6 +38,7 @@ function resolveBranchId(): string {
 }
 
 export default function CourierPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [branchId, setBranchId] = useState("");
   const [courierId, setCourierId] = useState("");
@@ -38,9 +46,11 @@ export default function CourierPage() {
 
   const load = useCallback(async (bid: string) => {
     if (!readToken()) return;
-    const res = await fetch(
-      `${apiUrl}/api/orders/branch/${bid}?status=READY,COURIER_ASSIGNED,ON_THE_WAY`,
-      { headers: authHeaders() },
+    const res = await ensureApiAuth(() =>
+      fetch(
+        `${apiUrl}/api/orders/branch/${bid}?status=READY,COURIER_ASSIGNED,ON_THE_WAY`,
+        { headers: authHeaders() },
+      ),
     );
     const data = await res.json();
     if (!res.ok) {
@@ -78,15 +88,17 @@ export default function CourierPage() {
   }, [branchId, load]);
 
   async function setStatus(orderId: string, status: string) {
-    const res = await fetch(`${apiUrl}/api/orders/${orderId}/status`, {
-      method: "PATCH",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        status,
-        courierId:
-          status === OrderStatus.COURIER_ASSIGNED ? courierId : undefined,
+    const res = await ensureApiAuth(() =>
+      fetch(`${apiUrl}/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          status,
+          courierId:
+            status === OrderStatus.COURIER_ASSIGNED ? courierId : undefined,
+        }),
       }),
-    });
+    );
     if (!res.ok) {
       const data = await res.json();
       setError(data.error ?? "Status update failed");
@@ -95,12 +107,22 @@ export default function CourierPage() {
     if (branchId) void load(branchId);
   }
 
+  function onLogout() {
+    clearSession();
+    router.push("/login");
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
           <h1>Kurye</h1>
-          <Link href="/dashboard">Yönetim</Link>
+          <div className={styles.headerLinks}>
+            <Link href="/dashboard">Yönetim</Link>
+            <button type="button" onClick={onLogout}>
+              Çıkış
+            </button>
+          </div>
         </div>
         <button type="button" onClick={() => branchId && load(branchId)}>
           Yenile
@@ -115,9 +137,12 @@ export default function CourierPage() {
           <li key={o.id} className={styles.card}>
             <div className={styles.cardTop}>
               <strong>
-                {o.guestName} · {o.guestPhone}
+                {o.guestName} ·{" "}
+                <a className={styles.phoneLink} href={`tel:${o.guestPhone}`}>
+                  {o.guestPhone}
+                </a>
               </strong>
-              <span>{o.status}</span>
+              <span>{orderStatusLabel(o.status)}</span>
             </div>
             <p>{formatTryLabel(o.totalCents)}</p>
             {o.addressSnapshot?.line1 ? (

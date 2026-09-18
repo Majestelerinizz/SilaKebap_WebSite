@@ -67,6 +67,72 @@
   color: var(--muted);
 }
 
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  font-size: 0.92rem;
+  background: var(--bg-elevated);
+}
+
+.stepDone {
+  opacity: 0.82;
+  color: var(--muted);
+}
+
+.stepDone .stepDot {
+  background: var(--ok);
+}
+
+.stepCurrent {
+  border-color: var(--accent);
+  background: rgba(255, 107, 53, 0.08);
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.stepDot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+.stepCurrent .stepDot {
+  background: var(--accent);
+}
+
+.cancelled,
+.pendingPay {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  font-size: 0.95rem;
+}
+
+.cancelled {
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.pendingPay {
+  color: var(--muted);
+}
+
 .list {
   padding-left: 1.1rem;
 }

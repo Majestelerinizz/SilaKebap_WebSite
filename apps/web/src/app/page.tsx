@@ -17,6 +17,7 @@ async function getBranches() {
         name: string;
         slug: string;
         isOpen: boolean;
+        phone: string | null;
       }>;
     };
     return data.branches;
@@ -27,8 +28,9 @@ async function getBranches() {
 
 const QUICK = [
   { label: "Kebaplar", src: "/menu/categories/kebaplar.jpg" },
-  { label: "Lahmacun", src: "/menu/categories/lahmacun-pide.jpg" },
   { label: "Dürümler", src: "/menu/categories/durumler.jpg" },
+  { label: "Lahmacun", src: "/menu/categories/lahmacun-pide.jpg" },
+  { label: "Tatlılar", src: "/menu/categories/tatlilar.jpg" },
   { label: "İçecekler", src: "/menu/categories/icecekler.jpg" },
 ] as const;
 
@@ -64,6 +66,14 @@ export default async function HomePage() {
           <p className={styles.status}>
             <span className={styles.dot} aria-hidden />
             {branch?.isOpen !== false ? "Şimdi açık" : "Kapalı"} · 25–40 dk
+            {branch?.phone ? (
+              <>
+                {" · "}
+                <a className={styles.phoneLink} href={`tel:${branch.phone}`}>
+                  {branch.phone}
+                </a>
+              </>
+            ) : null}
           </p>
           <h1 className={styles.headline}>Mangaldan sofrana</h1>
           <p className={styles.sub}>

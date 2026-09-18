@@ -1,3 +1,4 @@
 export * from "./enums.js";
 export * from "./money.js";
 export * from "./checkout.js";
+export * from "./labels.js";

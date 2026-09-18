@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { prisma } from "@silakebap/database";
-import { formatTryLabel } from "@silakebap/shared";
+import { formatTryLabel, orderStatusLabel } from "@silakebap/shared";
 import { env } from "../config/env.js";
 
 function createTransport() {
@@ -18,6 +18,27 @@ function createTransport() {
   });
 }
 
+async function safeSend(opts: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}): Promise<{ mode: string }> {
+  const transport = createTransport();
+  if (!transport) {
+    console.log(`[email:dev] To: ${opts.to}\n${opts.subject}\n${opts.text}`);
+    return { mode: "console-fallback" };
+  }
+  await transport.sendMail({
+    from: env.SMTP_FROM,
+    to: opts.to,
+    subject: opts.subject,
+    text: opts.text,
+    html: opts.html,
+  });
+  return { mode: "smtp" };
+}
+
 export async function getEmailTransportStatus() {
   return {
     configured: Boolean(env.SMTP_HOST),
@@ -29,73 +50,71 @@ export async function getEmailTransportStatus() {
 }
 
 export async function sendTestEmail(to: string): Promise<{ mode: string }> {
-  const subject = "Sıla Kebap — SMTP test";
-  const text = "SMTP bağlantısı çalışıyor.";
-  const transport = createTransport();
-  if (!transport) {
-    console.log(`[email:dev] TEST To: ${to}\n${subject}\n${text}`);
-    return { mode: "console-fallback" };
-  }
-  await transport.sendMail({
-    from: env.SMTP_FROM,
+  return safeSend({
     to,
-    subject,
-    text,
-    html: `<p>${text}</p>`,
+    subject: "Sıla Kebap — SMTP test",
+    text: "SMTP bağlantısı çalışıyor.",
+    html: `<p style="font-family:Georgia,serif">SMTP bağlantısı çalışıyor.</p>`,
   });
-  return { mode: "smtp" };
 }
 
 export async function sendOrderStatusEmail(orderId: string): Promise<void> {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { branch: true, items: true },
-  });
-  if (!order?.guestEmail) {
-    console.log(`[email] skip order ${orderId}: no guest email`);
-    return;
-  }
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { branch: true, items: true },
+    });
+    if (!order?.guestEmail) {
+      console.log(`[email] skip order ${orderId}: no guest email`);
+      return;
+    }
 
-  const trackingUrl = `${env.WEB_ORIGIN}/track/${order.trackingToken}`;
-  const subject = `Sipariş güncellemesi — ${order.branch.name} (${order.status})`;
-  const itemLines = order.items
-    .map((i) => `${i.quantity}× ${i.productName}`)
-    .join(", ");
-  const text = [
-    `Merhaba ${order.guestName},`,
-    "",
-    `Sipariş durumunuz: ${order.status}`,
-    `Ürünler: ${itemLines}`,
-    `Toplam: ${formatTryLabel(order.totalCents)}`,
-    `Takip: ${trackingUrl}`,
-    "",
-    "Afiyet olsun,",
-    "Sıla Kebap",
-  ].join("\n");
+    const statusTr = orderStatusLabel(order.status);
+    const trackingUrl = `${env.WEB_ORIGIN}/track/${order.trackingToken}`;
+    const isNew =
+      order.status === "RECEIVED" || order.status === "PENDING_PAYMENT";
+    const subject = isNew
+      ? `Siparişiniz alındı — ${order.branch.name}`
+      : `Sipariş güncellemesi — ${statusTr}`;
+    const itemLines = order.items
+      .map((i) => `${i.quantity}× ${i.productName}`)
+      .join(", ");
+    const greeting = isNew
+      ? "Siparişiniz bize ulaştı. Afiyet olsun!"
+      : `Sipariş durumunuz güncellendi: ${statusTr}`;
 
-  const html = `
-    <div style="font-family:Georgia,serif;max-width:520px;line-height:1.5;color:#1c1410">
-      <h1 style="font-size:22px;margin:0 0 12px">Sıla Kebap</h1>
-      <p>Merhaba ${order.guestName},</p>
-      <p>Sipariş durumunuz: <strong>${order.status}</strong></p>
-      <p>${itemLines}</p>
+    const text = [
+      `Merhaba ${order.guestName},`,
+      "",
+      greeting,
+      `Durum: ${statusTr}`,
+      `Ürünler: ${itemLines}`,
+      `Toplam: ${formatTryLabel(order.totalCents)}`,
+      `Takip: ${trackingUrl}`,
+      "",
+      "Sıla Kebap",
+    ].join("\n");
+
+    const html = `
+    <div style="font-family:Georgia,serif;max-width:520px;line-height:1.55;color:#1c1410;background:#fffaf6;padding:24px;border-radius:12px">
+      <h1 style="font-size:22px;margin:0 0 8px;color:#b34a1c">Sıla Kebap</h1>
+      <p style="margin:0 0 16px;color:#6b5b4f">${order.branch.name}</p>
+      <p>Merhaba <strong>${order.guestName}</strong>,</p>
+      <p>${greeting}</p>
+      <p style="font-size:18px">Durum: <strong style="color:#b34a1c">${statusTr}</strong></p>
+      <p style="color:#4a3f36">${itemLines}</p>
       <p>Toplam: <strong>${formatTryLabel(order.totalCents)}</strong></p>
-      <p><a href="${trackingUrl}" style="color:#b34a1c">Siparişini takip et</a></p>
-      <p style="color:#6b5b4f">Afiyet olsun.</p>
+      <p style="margin:24px 0">
+        <a href="${trackingUrl}" style="display:inline-block;background:#ff6b35;color:#140e0b;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">
+          Siparişini takip et
+        </a>
+      </p>
+      <p style="color:#6b5b4f;font-size:14px">Afiyet olsun.</p>
     </div>
   `;
 
-  const transport = createTransport();
-  if (!transport) {
-    console.log(`[email:dev] To: ${order.guestEmail}\n${subject}\n${text}`);
-    return;
+    await safeSend({ to: order.guestEmail, subject, text, html });
+  } catch (err) {
+    console.error(`[email] failed for order ${orderId}`, err);
   }
-
-  await transport.sendMail({
-    from: env.SMTP_FROM,
-    to: order.guestEmail,
-    subject,
-    text,
-    html,
-  });
 }

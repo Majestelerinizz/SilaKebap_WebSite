@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Syne, DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 
@@ -49,7 +50,11 @@ export default function RootLayout({
       lang="tr"
       data-theme="light"
       className={`${display.variable} ${serif.variable} ${body.variable}`}
+      suppressHydrationWarning
     >
+      <Script id="silakebap-theme-init" strategy="beforeInteractive">
+        {`(function(){try{var k='silakebap.theme';var t=localStorage.getItem(k);if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`}
+      </Script>
       <body>{children}</body>
     </html>
   );

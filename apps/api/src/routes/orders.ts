@@ -10,6 +10,7 @@ import { requireAuth, requireRoles } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import { sendOrderStatusEmail } from "../services/emailService.js";
 import { emitOrderUpdated } from "../realtime/emit.js";
+import { trackRateLimiter } from "../middleware/rateLimit.js";
 import { z } from "zod";
 
 export const ordersRouter = Router();
@@ -27,7 +28,7 @@ const allowedTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
   [OrderStatus.AWAITING_PICKUP]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
 };
 
-ordersRouter.get("/track/:token", async (req, res, next) => {
+ordersRouter.get("/track/:token", trackRateLimiter, async (req, res, next) => {
   try {
     const token = String(req.params.token);
     const order = await prisma.order.findUnique({
@@ -41,7 +42,6 @@ ordersRouter.get("/track/:token", async (req, res, next) => {
     if (!order) throw new HttpError(404, "Order not found");
     res.json({
       order: {
-        id: order.id,
         status: order.status,
         paymentStatus: order.paymentStatus,
         paymentMethod: order.paymentMethod,

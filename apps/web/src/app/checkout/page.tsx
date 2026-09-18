@@ -29,6 +29,14 @@ type Quote = {
   totalCents: number;
 };
 
+function localizeApiError(message: string): string {
+  const min = message.match(/Minimum order is (\d+) kuruş/);
+  if (min) {
+    return `Minimum sipariş tutarı: ${formatTryLabel(Number(min[1]))}`;
+  }
+  return message;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
@@ -42,6 +50,7 @@ export default function CheckoutPage() {
     PaymentMethod.CASH_ON_DELIVERY,
   );
   const [line1, setLine1] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [deliveryZoneId, setDeliveryZoneId] = useState("");
   const [zones, setZones] = useState<Zone[]>([]);
   const [couponCode, setCouponCode] = useState("");
@@ -69,6 +78,14 @@ export default function CheckoutPage() {
       if (list[0] && !deliveryZoneId) setDeliveryZoneId(list[0].id);
     })();
   }, [cart?.branchId, deliveryZoneId]);
+
+  useEffect(() => {
+    setNeighborhood("");
+  }, [deliveryZoneId]);
+
+  const selectedZone = zones.find((z) => z.id === deliveryZoneId);
+  const zoneNeighborhoods = selectedZone?.neighborhoods ?? [];
+  const onlinePayment = paymentMethod === PaymentMethod.IYZICO_ONLINE;
 
   useEffect(() => {
     if (fulfillmentType === FulfillmentType.PICKUP) {
@@ -105,7 +122,13 @@ export default function CheckoutPage() {
         },
         deliveryAddress:
           fulfillmentType === FulfillmentType.DELIVERY
-            ? { line1: line1 || "Adres", city: "İstanbul" }
+            ? {
+                line1: line1 || "Adres",
+                city: "İstanbul",
+                ...(neighborhood.trim()
+                  ? { neighborhood: neighborhood.trim() }
+                  : {}),
+              }
             : undefined,
         deliveryZoneId:
           fulfillmentType === FulfillmentType.DELIVERY
@@ -122,7 +145,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) {
         setQuote(null);
-        setQuoteError(data.error ?? "Fiyat alınamadı");
+        setQuoteError(localizeApiError(data.error ?? "Fiyat alınamadı"));
         return;
       }
       setQuote({
@@ -142,6 +165,7 @@ export default function CheckoutPage() {
     phone,
     email,
     line1,
+    neighborhood,
     deliveryZoneId,
     couponCode,
   ]);
@@ -167,7 +191,13 @@ export default function CheckoutPage() {
         contact: { name, phone, email: email || undefined },
         deliveryAddress:
           fulfillmentType === FulfillmentType.DELIVERY
-            ? { line1, city: "İstanbul" }
+            ? {
+                line1,
+                city: "İstanbul",
+                ...(neighborhood.trim()
+                  ? { neighborhood: neighborhood.trim() }
+                  : {}),
+              }
             : undefined,
         deliveryZoneId:
           fulfillmentType === FulfillmentType.DELIVERY
@@ -183,7 +213,7 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? JSON.stringify(data));
+        setError(localizeApiError(data.error ?? JSON.stringify(data)));
         return;
       }
       clearCart();
@@ -208,7 +238,7 @@ export default function CheckoutPage() {
         <BrandMark href="/cart" size={36} />
         <ThemeToggle />
       </header>
-      <h1>Checkout</h1>
+      <h1>Ödeme</h1>
 
       {!cart?.items.length ? (
         <p className={styles.hint}>
@@ -287,15 +317,17 @@ export default function CheckoutPage() {
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                placeholder="05xx xxx xx xx"
                 required
               />
             </label>
             <label>
-              E-posta (opsiyonel)
+              {onlinePayment ? "E-posta" : "E-posta (opsiyonel)"}
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required={onlinePayment}
               />
             </label>
             <label>
@@ -353,6 +385,23 @@ export default function CheckoutPage() {
                     ))}
                   </select>
                 </label>
+                {zoneNeighborhoods.length > 0 ? (
+                  <label>
+                    Mahalle
+                    <select
+                      value={neighborhood}
+                      onChange={(e) => setNeighborhood(e.target.value)}
+                      required
+                    >
+                      <option value="">Seçin</option>
+                      {zoneNeighborhoods.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </>
             ) : null}
             <label>

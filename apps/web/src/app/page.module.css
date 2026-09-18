@@ -67,11 +67,18 @@
 .status {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin: 0 0 0.65rem;
   font-size: 0.85rem;
   font-weight: 600;
   color: #ffe3c4;
+}
+
+.phoneLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .dot {

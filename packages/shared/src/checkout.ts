@@ -1,9 +1,17 @@
 import { z } from "zod";
 import { FulfillmentType, PaymentMethod } from "./enums.js";
 
+const trPhone = z
+  .string()
+  .min(10)
+  .max(20)
+  .refine((v) => /^(\+90|0)?5\d{9}$/.test(v.replace(/[\s\-()]/g, "")), {
+    message: "Geçerli bir Türkiye cep telefonu girin",
+  });
+
 export const guestContactSchema = z.object({
   name: z.string().min(2).max(120),
-  phone: z.string().min(10).max(20),
+  phone: trPhone,
   email: z.string().email().optional().or(z.literal("")),
 });
 
@@ -43,6 +51,15 @@ export const checkoutSchema = z
     items: z.array(cartLineSchema).min(1),
   })
   .superRefine((data, ctx) => {
+    if (data.paymentMethod === PaymentMethod.IYZICO_ONLINE) {
+      if (!data.contact.email || data.contact.email.length < 3) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Online ödeme için e-posta zorunlu",
+          path: ["contact", "email"],
+        });
+      }
+    }
     if (data.fulfillmentType === FulfillmentType.DELIVERY) {
       if (!data.deliveryAddress) {
         ctx.addIssue({
@@ -51,9 +68,7 @@ export const checkoutSchema = z
           path: ["deliveryAddress"],
         });
       }
-      if (
-        data.paymentMethod === PaymentMethod.PAY_AT_STORE
-      ) {
+      if (data.paymentMethod === PaymentMethod.PAY_AT_STORE) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "PAY_AT_STORE is only valid for PICKUP",
