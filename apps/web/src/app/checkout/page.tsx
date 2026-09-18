@@ -20,7 +20,12 @@ import {
 } from "@/lib/cart";
 import styles from "./checkout.module.css";
 
-type Zone = { id: string; name: string; feeCents: number; neighborhoods: string[] };
+type Zone = {
+  id: string;
+  name: string;
+  feeCents: number;
+  neighborhoods: string[] | null;
+};
 
 type Quote = {
   subtotalCents: number;
@@ -53,6 +58,7 @@ export default function CheckoutPage() {
   const [neighborhood, setNeighborhood] = useState("");
   const [deliveryZoneId, setDeliveryZoneId] = useState("");
   const [zones, setZones] = useState<Zone[]>([]);
+  const [zonesError, setZonesError] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState("");
@@ -68,23 +74,83 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (!cart?.branchId) return;
+    if (!cart?.branchId) {
+      setZones([]);
+      setDeliveryZoneId("");
+      setZonesError("");
+      return;
+    }
+
+    let cancelled = false;
+    const branchId = cart.branchId;
+
     void (async () => {
-      const res = await fetch(`${getApiUrl()}/api/catalog/branches/${cart.branchId}`);
-      const data = await res.json();
-      if (!res.ok) return;
-      const list = (data.branch.deliveryZones ?? []) as Zone[];
-      setZones(list);
-      if (list[0] && !deliveryZoneId) setDeliveryZoneId(list[0].id);
+      setZonesError("");
+      try {
+        const res = await fetch(
+          `${getApiUrl()}/api/catalog/branches/${encodeURIComponent(branchId)}`,
+        );
+        const data = (await res.json()) as {
+          branch?: { deliveryZones?: Zone[] };
+          error?: string;
+        };
+
+        if (!res.ok) {
+          // Seed / DB reset sonrası eski sepet branchId'si 404 olur
+          if (res.status === 404) {
+            if (!cancelled) {
+              setZones([]);
+              setDeliveryZoneId("");
+              setZonesError(
+                "Sepetteki şube artık geçerli değil. Menüden ürünleri yeniden ekleyin.",
+              );
+            }
+            return;
+          }
+          if (!cancelled) {
+            setZonesError(data.error ?? "Teslimat bölgeleri yüklenemedi");
+          }
+          return;
+        }
+
+        const list = (data.branch?.deliveryZones ?? []).filter(
+          (z) => z && z.id && z.name,
+        );
+        if (cancelled) return;
+
+        setZones(list);
+        setDeliveryZoneId((prev) => {
+          if (prev && list.some((z) => z.id === prev)) return prev;
+          return list[0]?.id ?? "";
+        });
+
+        if (!list.length) {
+          setZonesError(
+            "Bu şube için aktif teslimat bölgesi yok. Yönetim panelinden bölge ekleyin.",
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setZones([]);
+          setDeliveryZoneId("");
+          setZonesError("Teslimat bölgeleri yüklenemedi (ağ hatası)");
+        }
+      }
     })();
-  }, [cart?.branchId, deliveryZoneId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart?.branchId]);
 
   useEffect(() => {
     setNeighborhood("");
   }, [deliveryZoneId]);
 
   const selectedZone = zones.find((z) => z.id === deliveryZoneId);
-  const zoneNeighborhoods = selectedZone?.neighborhoods ?? [];
+  const zoneNeighborhoods = Array.isArray(selectedZone?.neighborhoods)
+    ? selectedZone.neighborhoods
+    : [];
   const onlinePayment = paymentMethod === PaymentMethod.IYZICO_ONLINE;
 
   useEffect(() => {
@@ -377,7 +443,11 @@ export default function CheckoutPage() {
                     value={deliveryZoneId}
                     onChange={(e) => setDeliveryZoneId(e.target.value)}
                     required
+                    disabled={!zones.length}
                   >
+                    {!zones.length ? (
+                      <option value="">Bölge yükleniyor / yok</option>
+                    ) : null}
                     {zones.map((z) => (
                       <option key={z.id} value={z.id}>
                         {z.name} (+{formatTryLabel(z.feeCents)})
@@ -385,6 +455,22 @@ export default function CheckoutPage() {
                     ))}
                   </select>
                 </label>
+                {zonesError ? (
+                  <p className={styles.error}>
+                    {zonesError}{" "}
+                    <button
+                      type="button"
+                      className={styles.linkBtn}
+                      onClick={() => {
+                        clearCart();
+                        setCart(null);
+                        router.push("/");
+                      }}
+                    >
+                      Sepeti temizle
+                    </button>
+                  </p>
+                ) : null}
                 {zoneNeighborhoods.length > 0 ? (
                   <label>
                     Mahalle

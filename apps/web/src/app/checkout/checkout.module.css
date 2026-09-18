@@ -179,6 +179,21 @@
   margin: 0;
 }
 
+.linkBtn {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-deep, var(--accent));
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  box-shadow: none;
+  min-height: 0;
+}
+
 @media (max-width: 480px) {
   .page {
     padding: 1rem 0.9rem calc(2.5rem + env(safe-area-inset-bottom));
