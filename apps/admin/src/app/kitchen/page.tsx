@@ -15,10 +15,10 @@ import {
   apiUrl,
   authHeaders,
   clearSession,
-  defaultBranchId,
   ensureApiAuth,
   readStaff,
   readToken,
+  resolveActiveBranchId,
 } from "@/lib/auth";
 import styles from "./kitchen.module.css";
 
@@ -59,12 +59,6 @@ const KITCHEN_SECTIONS: Array<{
   },
 ];
 
-function resolveBranchId(): string {
-  const saved = localStorage.getItem("silakebap.selectedBranchId");
-  if (saved) return saved;
-  return defaultBranchId(readStaff());
-}
-
 function OrderCard({
   order,
   onSetStatus,
@@ -72,6 +66,9 @@ function OrderCard({
   order: OrderRow;
   onSetStatus: (orderId: string, status: string) => void;
 }) {
+  const waitingCourier =
+    order.status === OrderStatus.READY && order.fulfillmentType === "DELIVERY";
+
   return (
     <li className={styles.card}>
       <div className={styles.cardTop}>
@@ -130,6 +127,9 @@ function OrderCard({
             Teslime hazır
           </button>
         ) : null}
+        {waitingCourier ? (
+          <p className={styles.waiting}>Kurye paneline düştü — bekleniyor</p>
+        ) : null}
         {order.status === OrderStatus.AWAITING_PICKUP ? (
           <button
             type="button"
@@ -182,13 +182,20 @@ export default function KitchenPage() {
       router.replace("/login");
       return;
     }
-    const bid = resolveBranchId();
-    if (!bid) {
-      setError("Şube bulunamadı");
-      return;
-    }
-    setBranchId(bid);
-    void load(bid);
+    let cancelled = false;
+    void (async () => {
+      const bid = await resolveActiveBranchId();
+      if (cancelled) return;
+      if (!bid) {
+        setError("Şube bulunamadı — dashboard’dan şube seçin");
+        return;
+      }
+      setBranchId(bid);
+      void load(bid);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [load, router]);
 
   useEffect(() => {

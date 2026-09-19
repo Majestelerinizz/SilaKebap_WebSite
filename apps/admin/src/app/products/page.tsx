@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { formatTryLabel } from "@silakebap/shared";
 import { AdminShell } from "@/components/AdminShell";
 import {
+  apiFetch,
   apiUrl,
-  authHeaders,
-  defaultBranchId,
-  readStaff,
+  resolveActiveBranchId,
 } from "@/lib/auth";
 import styles from "../adminForms.module.css";
 
@@ -64,8 +63,8 @@ export default function ProductsPage() {
 
   async function load() {
     const [pRes, cRes] = await Promise.all([
-      fetch(`${apiUrl}/api/admin/products`, { headers: authHeaders() }),
-      fetch(`${apiUrl}/api/admin/categories`, { headers: authHeaders() }),
+      apiFetch(`${apiUrl}/api/admin/products`),
+      apiFetch(`${apiUrl}/api/admin/categories`),
     ]);
     const pData = await pRes.json();
     const cData = await cRes.json();
@@ -82,20 +81,18 @@ export default function ProductsPage() {
   }
 
   useEffect(() => {
-    const staff = readStaff();
-    setBranchId(
-      localStorage.getItem("silakebap.selectedBranchId") ||
-        defaultBranchId(staff),
-    );
-    void load();
+    void (async () => {
+      const bid = await resolveActiveBranchId();
+      setBranchId(bid);
+      void load();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function createCategory(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch(`${apiUrl}/api/admin/categories`, {
+    const res = await apiFetch(`${apiUrl}/api/admin/categories`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({ name: catName }),
     });
     const data = await res.json();
@@ -111,9 +108,8 @@ export default function ProductsPage() {
   async function createProduct(e: React.FormEvent) {
     e.preventDefault();
     const cents = Math.round(Number(price) * 100);
-    const res = await fetch(`${apiUrl}/api/admin/products`, {
+    const res = await apiFetch(`${apiUrl}/api/admin/products`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({
         categoryId,
         name,
@@ -146,9 +142,8 @@ export default function ProductsPage() {
       return;
     }
     const existing = p.branchProducts.find((b) => b.branchId === branchId);
-    const res = await fetch(`${apiUrl}/api/admin/branch-products`, {
+    const res = await apiFetch(`${apiUrl}/api/admin/branch-products`, {
       method: "PUT",
-      headers: authHeaders(),
       body: JSON.stringify({
         branchId,
         productId: p.id,
@@ -180,11 +175,10 @@ export default function ProductsPage() {
         };
       });
 
-    const res = await fetch(
+    const res = await apiFetch(
       `${apiUrl}/api/admin/products/${productId}/option-groups`,
       {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify({
           name: ogName,
           type: ogType,
@@ -207,11 +201,10 @@ export default function ProductsPage() {
   async function uploadProductImage(productId: string, file: File) {
     setError("");
     setMsg("");
-    const prep = await fetch(
+    const prep = await apiFetch(
       `${apiUrl}/api/admin/products/${productId}/image-upload`,
       {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify({ contentType: file.type || "image/jpeg" }),
       },
     );
@@ -231,9 +224,8 @@ export default function ProductsPage() {
       return;
     }
 
-    const save = await fetch(`${apiUrl}/api/admin/products/${productId}`, {
+    const save = await apiFetch(`${apiUrl}/api/admin/products/${productId}`, {
       method: "PATCH",
-      headers: authHeaders(),
       body: JSON.stringify({ imageKey: prepData.key }),
     });
     if (!save.ok) {

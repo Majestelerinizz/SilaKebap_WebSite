@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { formatTryLabel } from "@silakebap/shared";
 import { AdminShell } from "@/components/AdminShell";
 import {
+  apiFetch,
   apiUrl,
-  authHeaders,
-  defaultBranchId,
-  readStaff,
+  resolveActiveBranchId,
 } from "@/lib/auth";
 import styles from "../adminForms.module.css";
 
@@ -41,12 +40,8 @@ export default function ZonesPage() {
 
   async function load(bid: string) {
     const [zRes, hRes, bRes] = await Promise.all([
-      fetch(`${apiUrl}/api/admin/branches/${bid}/zones`, {
-        headers: authHeaders(),
-      }),
-      fetch(`${apiUrl}/api/admin/branches/${bid}/hours`, {
-        headers: authHeaders(),
-      }),
+      apiFetch(`${apiUrl}/api/admin/branches/${bid}/zones`),
+      apiFetch(`${apiUrl}/api/admin/branches/${bid}/hours`),
       fetch(`${apiUrl}/api/catalog/branches/${bid}`),
     ]);
     const zData = await zRes.json();
@@ -62,18 +57,17 @@ export default function ZonesPage() {
   }
 
   useEffect(() => {
-    const bid =
-      localStorage.getItem("silakebap.selectedBranchId") ||
-      defaultBranchId(readStaff());
-    setBranchId(bid);
-    if (bid) void load(bid);
+    void (async () => {
+      const bid = await resolveActiveBranchId();
+      setBranchId(bid);
+      if (bid) void load(bid);
+    })();
   }, []);
 
   async function addZone(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch(`${apiUrl}/api/admin/branches/${branchId}/zones`, {
+    const res = await apiFetch(`${apiUrl}/api/admin/branches/${branchId}/zones`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({
         name: zoneName,
         feeCents: Math.round(Number(fee) * 100),
@@ -93,18 +87,16 @@ export default function ZonesPage() {
   }
 
   async function toggleOpen() {
-    const res = await fetch(`${apiUrl}/api/admin/branches/${branchId}`, {
+    const res = await apiFetch(`${apiUrl}/api/admin/branches/${branchId}`, {
       method: "PATCH",
-      headers: authHeaders(),
       body: JSON.stringify({ isOpen: !isOpen }),
     });
     if (res.ok) setIsOpen(!isOpen);
   }
 
   async function saveHour(dayOfWeek: number, openTime: string, closeTime: string) {
-    await fetch(`${apiUrl}/api/admin/branches/${branchId}/hours`, {
+    await apiFetch(`${apiUrl}/api/admin/branches/${branchId}/hours`, {
       method: "PUT",
-      headers: authHeaders(),
       body: JSON.stringify({ dayOfWeek, openTime, closeTime, isClosed: false }),
     });
     void load(branchId);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
-import { apiUrl, authHeaders, defaultBranchId, readStaff } from "@/lib/auth";
+import { apiFetch, apiUrl, resolveActiveBranchId } from "@/lib/auth";
 import styles from "../adminForms.module.css";
 
 type Coupon = {
@@ -22,9 +22,7 @@ export default function CouponsPage() {
   const [error, setError] = useState("");
 
   async function load() {
-    const res = await fetch(`${apiUrl}/api/admin/coupons`, {
-      headers: authHeaders(),
-    });
+    const res = await apiFetch(`${apiUrl}/api/admin/coupons`);
     const data = await res.json();
     if (!res.ok) {
       setError(data.error ?? "Yüklenemedi");
@@ -39,12 +37,9 @@ export default function CouponsPage() {
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
-    const branchId =
-      localStorage.getItem("silakebap.selectedBranchId") ||
-      defaultBranchId(readStaff());
-    const res = await fetch(`${apiUrl}/api/admin/coupons`, {
+    const branchId = await resolveActiveBranchId();
+    const res = await apiFetch(`${apiUrl}/api/admin/coupons`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({
         code,
         type,
@@ -63,9 +58,8 @@ export default function CouponsPage() {
   }
 
   async function toggle(c: Coupon) {
-    await fetch(`${apiUrl}/api/admin/coupons/${c.id}`, {
+    await apiFetch(`${apiUrl}/api/admin/coupons/${c.id}`, {
       method: "PATCH",
-      headers: authHeaders(),
       body: JSON.stringify({ isActive: !c.isActive }),
     });
     void load();

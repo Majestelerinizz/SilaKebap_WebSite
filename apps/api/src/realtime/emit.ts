@@ -24,6 +24,8 @@ export function emitOrderCreated(io: Server | undefined, order: OrderPayload): v
   if (!io) return;
   const data = payload(order);
   io.to(`branch:${order.branchId}:kitchen`).emit("order:created", data);
+  io.to(`branch:${order.branchId}:admin`).emit("order:created", data);
+  io.to(`branch:${order.branchId}:courier`).emit("order:created", data);
   io.to(`order:${order.id}`).emit("order:updated", data);
 }
 
@@ -32,5 +34,6 @@ export function emitOrderUpdated(io: Server | undefined, order: OrderPayload): v
   const data = payload(order);
   io.to(`branch:${order.branchId}:kitchen`).emit("order:updated", data);
   io.to(`branch:${order.branchId}:courier`).emit("order:updated", data);
+  io.to(`branch:${order.branchId}:admin`).emit("order:updated", data);
   io.to(`order:${order.id}`).emit("order:updated", data);
 }

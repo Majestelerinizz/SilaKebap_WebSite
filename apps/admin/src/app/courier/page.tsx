@@ -14,10 +14,10 @@ import {
   apiUrl,
   authHeaders,
   clearSession,
-  defaultBranchId,
   ensureApiAuth,
   readStaff,
   readToken,
+  resolveActiveBranchId,
 } from "@/lib/auth";
 import styles from "./courier.module.css";
 
@@ -37,12 +37,6 @@ type OrderRow = {
   } | null;
   items: Array<{ productName: string; quantity: number }>;
 };
-
-function resolveBranchId(): string {
-  const saved = localStorage.getItem("silakebap.selectedBranchId");
-  if (saved) return saved;
-  return defaultBranchId(readStaff());
-}
 
 function addressLine(o: OrderRow): string {
   const a = o.addressSnapshot;
@@ -89,17 +83,27 @@ export default function CourierPage() {
       return;
     }
     setCourierId(staff.id);
-    const bid = resolveBranchId();
-    if (bid) {
+    let cancelled = false;
+    void (async () => {
+      const bid = await resolveActiveBranchId();
+      if (cancelled) return;
+      if (!bid) {
+        setError("Şube bulunamadı — dashboard’dan şube seçin");
+        return;
+      }
       setBranchId(bid);
       void load(bid);
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [load, router]);
 
   useEffect(() => {
     if (!branchId) return;
     const socket: Socket = io(apiUrl, { transports: ["websocket", "polling"] });
     socket.emit("join:courier", branchId);
+    socket.on("order:created", () => void load(branchId));
     socket.on("order:updated", () => void load(branchId));
     return () => {
       socket.disconnect();

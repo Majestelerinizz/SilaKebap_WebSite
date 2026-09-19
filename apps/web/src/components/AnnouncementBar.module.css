@@ -1,0 +1,48 @@
+.bar {
+  position: relative;
+  overflow: hidden;
+  height: 2rem;
+  background: linear-gradient(90deg, #1a120e 0%, #2a1a12 45%, #1a120e 100%);
+  color: #f6ebe3;
+  border-bottom: 1px solid rgba(255, 107, 53, 0.35);
+  z-index: 50;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  gap: 3.5rem;
+  height: 100%;
+  align-items: center;
+  animation: marqueeLtr 36s linear infinite;
+}
+
+.msg {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding-left: 0.25rem;
+}
+
+@keyframes marqueeLtr {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+    width: 100%;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .msg[aria-hidden] {
+    display: none;
+  }
+}

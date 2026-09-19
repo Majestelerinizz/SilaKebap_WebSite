@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { formatTryLabel, orderStatusLabel } from "@silakebap/shared";
+import { io, type Socket } from "socket.io-client";
 import { AdminShell } from "@/components/AdminShell";
 import {
+  apiFetch,
   apiUrl,
-  authHeaders,
-  defaultBranchId,
-  readStaff,
+  clearSession,
+  resolveActiveBranchId,
 } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 import styles from "../adminForms.module.css";
 
 type Order = {
@@ -24,28 +26,64 @@ type Order = {
 };
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [live, setLive] = useState(false);
+
+  const load = useCallback(
+    async (bid: string) => {
+      const q = bid ? `?branchId=${bid}` : "";
+      const res = await apiFetch(`${apiUrl}/api/admin/orders${q}`);
+      if (res.status === 401) {
+        clearSession();
+        router.replace("/login");
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Yüklenemedi");
+        return;
+      }
+      setError("");
+      setOrders(data.orders ?? []);
+    },
+    [router],
+  );
 
   useEffect(() => {
-    const branchId =
-      localStorage.getItem("silakebap.selectedBranchId") ||
-      defaultBranchId(readStaff());
-    const q = branchId ? `?branchId=${branchId}` : "";
-    void fetch(`${apiUrl}/api/admin/orders${q}`, { headers: authHeaders() }).then(
-      async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error ?? "Yüklenemedi");
-          return;
-        }
-        setOrders(data.orders ?? []);
-      },
-    );
-  }, []);
+    let cancelled = false;
+    void (async () => {
+      const bid = await resolveActiveBranchId();
+      if (cancelled) return;
+      setBranchId(bid);
+      await load(bid);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
+
+  useEffect(() => {
+    if (!branchId) return;
+    const socket: Socket = io(apiUrl, { transports: ["websocket", "polling"] });
+    socket.emit("join:admin", branchId);
+    socket.on("connect", () => setLive(true));
+    socket.on("disconnect", () => setLive(false));
+    socket.on("order:created", () => void load(branchId));
+    socket.on("order:updated", () => void load(branchId));
+    return () => {
+      socket.disconnect();
+      setLive(false);
+    };
+  }, [branchId, load]);
 
   return (
-    <AdminShell title="Siparişler" subtitle="Şube sipariş geçmişi">
+    <AdminShell
+      title="Siparişler"
+      subtitle={live ? "Canlı · şube siparişleri" : "Şube sipariş geçmişi"}
+    >
       {error ? <p className={styles.error}>{error}</p> : null}
       <ul className={styles.list}>
         {orders.map((o) => (

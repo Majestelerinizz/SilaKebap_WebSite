@@ -50,30 +50,8 @@ export async function priceCheckout(input: CheckoutInput): Promise<PricedCheckou
   if (!branch) throw new HttpError(404, "Branch not found");
   if (!branch.isOpen) throw new HttpError(400, "Branch is closed");
 
-  // Working hours (Europe/Istanbul wall clock approx via local Date — VPS TZ should be Istanbul)
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Sun
-  const hours = await prisma.workingHours.findUnique({
-    where: {
-      branchId_dayOfWeek: { branchId: branch.id, dayOfWeek },
-    },
-  });
-  if (hours) {
-    if (hours.isClosed) {
-      throw new HttpError(400, "Branch is closed today");
-    }
-    const [oh, om] = hours.openTime.split(":").map(Number);
-    const [ch, cm] = hours.closeTime.split(":").map(Number);
-    const mins = now.getHours() * 60 + now.getMinutes();
-    const openMins = (oh ?? 0) * 60 + (om ?? 0);
-    const closeMins = (ch ?? 0) * 60 + (cm ?? 0);
-    if (mins < openMins || mins >= closeMins) {
-      throw new HttpError(
-        400,
-        `Branch accepts orders ${hours.openTime}–${hours.closeTime}`,
-      );
-    }
-  }
+  // v1: çalışma saati aralığı (11:00–23:00 vb.) geçici olarak kapalı — sadece branch.isOpen
+  // kontrol edilir. Saat kontrolü sonra yeniden açılacak.
 
   let deliveryFeeCents = 0;
   let zoneMinOrder: number | null = null;

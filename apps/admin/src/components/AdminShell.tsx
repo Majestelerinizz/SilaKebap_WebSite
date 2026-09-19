@@ -9,6 +9,8 @@ import {
   clearSession,
   defaultBranchId,
   readStaff,
+  resolveActiveBranchId,
+  writeSelectedBranchId,
   type StaffUser,
 } from "@/lib/auth";
 import { adminNavFor } from "@/lib/nav";
@@ -56,9 +58,16 @@ export function AdminShell({ title, subtitle, children }: Props) {
       return;
     }
     setStaff(s);
-    setBranchId(
-      localStorage.getItem("silakebap.selectedBranchId") || defaultBranchId(s),
-    );
+    void (async () => {
+      const bid = await resolveActiveBranchId();
+      if (bid) setBranchId(bid);
+      else {
+        setBranchId(
+          localStorage.getItem("silakebap.selectedBranchId") ||
+            defaultBranchId(s),
+        );
+      }
+    })();
     if (s.isSuperAdmin) {
       void fetch(`${apiUrl}/api/catalog/branches`, { headers: authHeaders() })
         .then((r) => r.json())
@@ -92,10 +101,7 @@ export function AdminShell({ title, subtitle, children }: Props) {
               value={branchId}
               onChange={(e) => {
                 setBranchId(e.target.value);
-                localStorage.setItem(
-                  "silakebap.selectedBranchId",
-                  e.target.value,
-                );
+                writeSelectedBranchId(e.target.value);
               }}
             >
               {branches.map((b) => (

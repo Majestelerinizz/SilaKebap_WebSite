@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
-import { apiUrl, authHeaders } from "@/lib/auth";
+import { apiFetch, apiUrl } from "@/lib/auth";
 import styles from "../adminForms.module.css";
 
 type Integrations = {
@@ -33,9 +33,7 @@ export default function IntegrationsPage() {
   const [error, setError] = useState("");
 
   async function load() {
-    const res = await fetch(`${apiUrl}/api/admin/integrations`, {
-      headers: authHeaders(),
-    });
+    const res = await apiFetch(`${apiUrl}/api/admin/integrations`);
     const json = await res.json();
     if (!res.ok) {
       setError(json.error ?? "Yüklenemedi");
@@ -50,9 +48,8 @@ export default function IntegrationsPage() {
 
   async function sendTest(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch(`${apiUrl}/api/admin/integrations/email-test`, {
+    const res = await apiFetch(`${apiUrl}/api/admin/integrations/email-test`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({ to }),
     });
     const json = await res.json();

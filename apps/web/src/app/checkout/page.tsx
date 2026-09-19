@@ -301,7 +301,7 @@ export default function CheckoutPage() {
   return (
     <main className={styles.page}>
       <header className={styles.top}>
-        <BrandMark href="/cart" size={36} />
+        <BrandMark href={cart?.branchId ? `/menu/${cart.branchId}` : "/"} size={36} />
         <ThemeToggle />
       </header>
       <h1>Ödeme</h1>

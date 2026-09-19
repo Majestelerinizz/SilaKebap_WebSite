@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { formatTryLabel } from "@silakebap/shared";
-import { CartBadge } from "@/components/CartBadge";
 import { SafeImage } from "@/components/SafeImage";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getApiUrl } from "@/lib/api";
@@ -42,11 +41,11 @@ type Product = {
 
 type StepId = "size" | "extra" | "remove" | "cart";
 
-const STEP_META: Array<{ id: StepId; label: string; types: string[] }> = [
-  { id: "size", label: "Boy", types: ["SIZE", "SINGLE"] },
-  { id: "extra", label: "Ekstra", types: ["EXTRA", "MULTI", "COMBO"] },
-  { id: "remove", label: "Çıkar", types: ["REMOVABLE"] },
-  { id: "cart", label: "Sepete", types: [] },
+const STEP_META: Array<{ id: StepId; label: string }> = [
+  { id: "size", label: "Porsiyon" },
+  { id: "extra", label: "Ekstralar" },
+  { id: "remove", label: "Çıkarılabilir" },
+  { id: "cart", label: "Sepete" },
 ];
 
 function groupsForStep(groups: OptionGroup[], stepId: StepId) {
@@ -66,6 +65,10 @@ function groupsForStep(groups: OptionGroup[], stepId: StepId) {
   );
 }
 
+function stepDomId(id: StepId) {
+  return `step-${id}`;
+}
+
 export default function ProductClient({
   branchId,
   productId,
@@ -76,11 +79,9 @@ export default function ProductClient({
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
-  const [openGroupId, setOpenGroupId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
-  const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
     void (async () => {
@@ -103,35 +104,19 @@ export default function ProductClient({
           else defaults[g.id] = [];
         }
         setSelected(defaults);
-        const first = p.optionGroups.find((g) => g.isRequired) ?? p.optionGroups[0];
-        setOpenGroupId(first?.id ?? null);
       } catch (e) {
         setError(String(e));
       }
     })();
   }, [branchId, productId]);
 
-  const steps = useMemo(() => {
-    if (!product) return STEP_META.filter((s) => s.id === "cart");
-    const withGroups = STEP_META.filter((s) => {
+  const sections = useMemo(() => {
+    if (!product) return [] as Array<{ id: StepId; label: string }>;
+    return STEP_META.filter((s) => {
       if (s.id === "cart") return true;
       return groupsForStep(product.optionGroups, s.id).length > 0;
     });
-    return withGroups.length ? withGroups : STEP_META.filter((s) => s.id === "cart");
   }, [product]);
-
-  const activeStep = steps[Math.min(stepIndex, steps.length - 1)];
-  const stepGroups =
-    product && activeStep
-      ? groupsForStep(product.optionGroups, activeStep.id)
-      : [];
-
-  useEffect(() => {
-    if (!product || !activeStep || activeStep.id === "cart") return;
-    const groups = groupsForStep(product.optionGroups, activeStep.id);
-    const preferred = groups.find((g) => g.isRequired) ?? groups[0] ?? null;
-    setOpenGroupId(preferred?.id ?? null);
-  }, [activeStep, product]);
 
   const unitCents = useMemo(() => {
     if (!product) return 0;
@@ -162,8 +147,10 @@ export default function ProductClient({
     });
   }
 
-  function validateGroups(groups: OptionGroup[]): string | null {
-    for (const g of groups) {
+  function validate(): string | null {
+    if (!product) return "Ürün yok";
+    if (!product.isAvailable) return "Ürün müsait değil";
+    for (const g of product.optionGroups) {
       const n = (selected[g.id] ?? []).length;
       if (g.isRequired && n < Math.max(1, g.minSelect)) {
         return `${g.name} seçimi zorunlu`;
@@ -174,31 +161,30 @@ export default function ProductClient({
     return null;
   }
 
-  function validate(): string | null {
-    if (!product) return "Ürün yok";
-    if (!product.isAvailable) return "Ürün müsait değil";
-    return validateGroups(product.optionGroups);
-  }
-
-  function onNext() {
-    const err = validateGroups(stepGroups);
-    if (err) {
-      setError(err);
-      return;
-    }
-    setError("");
-    setStepIndex((i) => Math.min(i + 1, steps.length - 1));
-  }
-
-  function onBack() {
-    setError("");
-    setStepIndex((i) => Math.max(0, i - 1));
+  function scrollToSection(id: StepId) {
+    const el = document.getElementById(stepDomId(id));
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 24;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
   }
 
   function onAdd() {
     const err = validate();
     if (err || !product) {
       setError(err ?? "Hata");
+      if (err && product) {
+        for (const s of sections) {
+          if (s.id === "cart") continue;
+          const groups = groupsForStep(product.optionGroups, s.id);
+          for (const g of groups) {
+            const n = (selected[g.id] ?? []).length;
+            if (g.isRequired && n < Math.max(1, g.minSelect)) {
+              scrollToSection(s.id);
+              return;
+            }
+          }
+        }
+      }
       return;
     }
     const optionItemIds = product.optionGroups.flatMap(
@@ -221,7 +207,7 @@ export default function ProductClient({
       imageSlug: product.slug,
       imageUrl: product.imageUrl,
     });
-    router.push("/cart");
+    router.push(`/menu/${branchId}`);
   }
 
   if (error && !product) {
@@ -241,14 +227,13 @@ export default function ProductClient({
     );
   }
 
-  const isLast = activeStep?.id === "cart";
   const summaryBits = product.optionGroups
     .flatMap((g) =>
       (selected[g.id] ?? [])
         .map((id) => g.items.find((i) => i.id === id)?.name)
         .filter(Boolean),
     )
-    .slice(0, 4);
+    .slice(0, 6);
 
   return (
     <main className={styles.page}>
@@ -256,7 +241,6 @@ export default function ProductClient({
         <Link href={`/menu/${branchId}`}>← Menü</Link>
         <div className={styles.headerActions}>
           <ThemeToggle />
-          <CartBadge />
         </div>
       </header>
 
@@ -266,128 +250,113 @@ export default function ProductClient({
           fallbackSrc={productImageFallback()}
           alt={product.name}
           fill
-          sizes="(max-width: 560px) 100vw, 560px"
+          sizes="(max-width: 959px) 100vw, 48vw"
           className={styles.heroImg}
           priority
         />
       </div>
 
-      <h1 className={styles.title}>{product.name}</h1>
-      {product.description ? (
-        <p className={styles.desc}>{product.description}</p>
-      ) : null}
-      <p className={styles.price}>{formatTryLabel(unitCents)}</p>
+      <div className={styles.config}>
+        <h1 className={styles.title}>{product.name}</h1>
+        {product.description ? (
+          <p className={styles.desc}>{product.description}</p>
+        ) : null}
+        <p className={styles.price}>{formatTryLabel(unitCents)}</p>
 
-      <ol
-        className={styles.steps}
-        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
-        aria-label="Seçim adımları"
-      >        {steps.map((s, i) => (
-          <li
-            key={s.id}
-            className={`${styles.step} ${i === stepIndex ? styles.stepActive : ""} ${i < stepIndex ? styles.stepDone : ""}`}
-          >
-            <span className={styles.stepNum}>{i + 1}</span>
-            <span>{s.label}</span>
-          </li>
-        ))}
-      </ol>
-
-      {!isLast ? (
-        <div className={styles.groups}>
-          {stepGroups.map((g) => {
-            const open = openGroupId === g.id;
-            return (
-              <section key={g.id} className={styles.group}>
-                <button
-                  type="button"
-                  className={styles.groupToggle}
-                  onClick={() => setOpenGroupId(open ? null : g.id)}
+        <div className={styles.elevator}>
+          {sections
+            .filter((s) => s.id !== "cart")
+            .map((s) => {
+              const groups = groupsForStep(product.optionGroups, s.id);
+              return (
+                <section
+                  key={s.id}
+                  id={stepDomId(s.id)}
+                  className={styles.block}
                 >
-                  <span>
-                    {g.name}
-                    {g.isRequired ? " *" : ""}
-                  </span>
-                  <span>{open ? "−" : "+"}</span>
-                </button>
-                {open ? (
-                  <ul className={styles.options}>
-                    {g.items.map((item) => {
-                      const checked = (selected[g.id] ?? []).includes(item.id);
-                      return (
-                        <li key={item.id}>
-                          <label className={styles.option}>
-                            <input
-                              type={g.maxSelect <= 1 ? "radio" : "checkbox"}
-                              name={g.id}
-                              checked={checked}
-                              onChange={() => toggleOption(g, item.id)}
-                            />
-                            <span>{item.name}</span>
-                            {item.priceDeltaCents !== 0 ? (
-                              <em>
-                                {item.priceDeltaCents > 0 ? "+" : ""}
-                                {formatTryLabel(item.priceDeltaCents)}
-                              </em>
-                            ) : null}
-                          </label>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </section>
-            );
-          })}
+                  <h2 className={styles.blockTitle}>{s.label}</h2>
+                  <div className={styles.groups}>
+                    {groups.map((g) => (
+                      <div key={g.id} className={styles.group}>
+                        <div className={styles.groupHead}>
+                          <span>
+                            {g.name}
+                            {g.isRequired ? " *" : ""}
+                          </span>
+                        </div>
+                        <ul className={styles.options}>
+                          {g.items.map((item) => {
+                            const checked = (selected[g.id] ?? []).includes(
+                              item.id,
+                            );
+                            return (
+                              <li key={item.id}>
+                                <label className={styles.option}>
+                                  <input
+                                    type={
+                                      g.maxSelect <= 1 ? "radio" : "checkbox"
+                                    }
+                                    name={g.id}
+                                    checked={checked}
+                                    onChange={() => toggleOption(g, item.id)}
+                                  />
+                                  <span>{item.name}</span>
+                                  {item.priceDeltaCents !== 0 ? (
+                                    <em>
+                                      {item.priceDeltaCents > 0 ? "+" : ""}
+                                      {formatTryLabel(item.priceDeltaCents)}
+                                    </em>
+                                  ) : null}
+                                </label>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+
+          <section id={stepDomId("cart")} className={styles.block}>
+            <h2 className={styles.blockTitle}>Sepete</h2>
+            {summaryBits.length ? (
+              <p className={styles.summary}>
+                Seçimler: {summaryBits.join(" · ")}
+              </p>
+            ) : null}
+            <label className={styles.note}>
+              Not
+              <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="İsteğe bağlı"
+              />
+            </label>
+            <div className={styles.qtyRow}>
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                aria-label="Azalt"
+              >
+                −
+              </button>
+              <span>{qty}</span>
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.min(99, q + 1))}
+                aria-label="Artır"
+              >
+                +
+              </button>
+            </div>
+          </section>
         </div>
-      ) : (
-        <>
-          {summaryBits.length ? (
-            <p className={styles.summary}>
-              Seçimler: {summaryBits.join(" · ")}
-            </p>
-          ) : null}
-          <label className={styles.note}>
-            Not
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="İsteğe bağlı"
-            />
-          </label>
-          <div className={styles.qtyRow}>
-            <button
-              type="button"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-            >
-              −
-            </button>
-            <span>{qty}</span>
-            <button
-              type="button"
-              onClick={() => setQty((q) => Math.min(99, q + 1))}
-            >
-              +
-            </button>
-          </div>
-        </>
-      )}
 
-      {error ? <p className={styles.error}>{error}</p> : null}
+        {error ? <p className={styles.error}>{error}</p> : null}
 
-      <div className={styles.stickyBar}>
-        {stepIndex > 0 ? (
-          <button type="button" className={styles.backBtn} onClick={onBack}>
-            Geri
-          </button>
-        ) : (
-          <span />
-        )}
-        {!isLast ? (
-          <button type="button" className={styles.addBtn} onClick={onNext}>
-            Devam — {formatTryLabel(unitCents)}
-          </button>
-        ) : (
+        <div className={styles.stickyBar}>
           <button
             type="button"
             className={styles.addBtn}
@@ -396,7 +365,7 @@ export default function ProductClient({
           >
             Sepete ekle — {formatTryLabel(unitCents * qty)}
           </button>
-        )}
+        </div>
       </div>
     </main>
   );

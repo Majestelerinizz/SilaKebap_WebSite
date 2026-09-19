@@ -5,6 +5,240 @@
   animation: fadeIn 0.3s var(--ease) both;
 }
 
+.shell {
+  display: block;
+}
+
+.mainCol {
+  min-width: 0;
+}
+
+.cartPanel {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 1.25rem;
+    align-items: start;
+    padding: 0 1rem;
+  }
+
+  .cartSlot {
+    min-height: 1px;
+  }
+
+  .featured .sectionTitle,
+  .section .sectionTitle,
+  .featuredTrack,
+  .list {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cartPanel {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 7.2rem;
+    align-self: start;
+    width: 300px;
+    max-height: calc(100dvh - 8rem);
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+}
+
+.cartHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.cartHead strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.cartHead span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cartEmpty {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.cartList {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.cartLine {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.cartLine:last-child {
+  border-bottom: none;
+}
+
+.cartLineTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cartLineTop strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.cartRemove {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.15rem;
+}
+
+.cartOpts {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.cartLineFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.cartLineFoot em {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.cartQty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem;
+}
+
+.cartQty button {
+  width: 1.65rem;
+  height: 1.65rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cartQty span {
+  min-width: 1.1rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.cartFooter {
+  padding: 0.85rem 1rem 1rem;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 55%, var(--bg-elevated));
+}
+
+.cartTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.65rem;
+  font-size: 0.9rem;
+}
+
+.cartTotal strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.cartCheckout {
+  display: grid;
+  place-items: center;
+  min-height: 2.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #140e0b;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.cartCheckout[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.cartMobileBar {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .cartMobileBar {
+    position: fixed;
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: calc(0.85rem + env(safe-area-inset-bottom));
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 3.1rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: #140e0b;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 10px 28px rgba(255, 107, 53, 0.35);
+  }
+}
+
 .header {
   position: sticky;
   top: 0;
@@ -204,7 +438,7 @@
 
 .section {
   padding: 1.15rem 0 0.25rem;
-  scroll-margin-top: 7.5rem;
+  scroll-margin-top: 10rem;
 }
 
 .list {
@@ -360,7 +594,7 @@
   }
 
   .section {
-    scroll-margin-top: 7.2rem;
+    scroll-margin-top: 9.5rem;
   }
 
   .row {
@@ -387,5 +621,14 @@
   .plus {
     width: 2.25rem;
     height: 2.25rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

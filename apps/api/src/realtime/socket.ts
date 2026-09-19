@@ -33,6 +33,11 @@ export async function createSocketServer(httpServer: HttpServer): Promise<Server
         void socket.join(`branch:${branchId}:courier`);
       }
     });
+    socket.on("join:admin", (branchId: string) => {
+      if (typeof branchId === "string") {
+        void socket.join(`branch:${branchId}:admin`);
+      }
+    });
     socket.on("join:order", (orderId: string) => {
       if (typeof orderId === "string") {
         void socket.join(`order:${orderId}`);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatTryLabel } from "@silakebap/shared";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { BrandMark } from "@/components/BrandMark";
-import { CartBadge } from "@/components/CartBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SafeImage } from "@/components/SafeImage";
 import { apiUrl } from "@/lib/api";
@@ -9,7 +9,7 @@ import {
   productImageFallback,
   resolveProductImage,
 } from "@/lib/media";
-import { CategoryRail } from "./CategoryRail";
+import { CategoryRail, MenuCartSidebar } from "./CategoryRail";
 import styles from "./menu.module.css";
 
 type MenuProduct = {
@@ -57,6 +57,7 @@ export default async function MenuPage({
 
   return (
     <main className={styles.page}>
+      <AnnouncementBar />
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <BrandMark href="/" size={36} showWordmark={false} />
@@ -70,7 +71,6 @@ export default async function MenuPage({
         </div>
         <div className={styles.headerActions}>
           <ThemeToggle />
-          <CartBadge />
         </div>
       </header>
 
@@ -89,91 +89,94 @@ export default async function MenuPage({
       {!menu ? (
         <p className={styles.empty}>Menü yüklenemedi. API çalışıyor mu?</p>
       ) : (
-        <>
-          {featured.length > 0 ? (
-            <section className={styles.featured} aria-label="Öne çıkanlar">
-              <div className={styles.sectionTitle}>
-                <h2>Öne çıkanlar</h2>
-              </div>
-              <div className={styles.featuredTrack}>
-                {featured.map((p, i) => (
-                  <Link
-                    key={`feat-${p.id}`}
-                    href={`/menu/${branchId}/product/${p.id}`}
-                    className={styles.featCard}
-                    prefetch
-                  >
-                    <div className={styles.featMedia}>
-                      <SafeImage
-                        src={resolveProductImage(p.slug, p.imageUrl)}
-                        fallbackSrc={productImageFallback()}
-                        alt={p.name}
-                        fill
-                        priority={i === 0}
-                        sizes="260px"
-                        className={styles.featImg}
-                      />
-                    </div>
-                    <div className={styles.featBody}>
-                      <strong>{p.name}</strong>
-                      <span>{formatTryLabel(p.priceCents)}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {cats.map((cat) => (
-            <section
-              key={cat.id}
-              id={`cat-${cat.id}`}
-              className={styles.section}
-            >
-              <div className={styles.sectionTitle}>
-                <h2>{cat.name}</h2>
-              </div>
-              <ul className={styles.list}>
-                {cat.products.map((p) => (
-                  <li key={p.id}>
+        <div className={styles.shell}>
+          <div className={styles.mainCol}>
+            {featured.length > 0 ? (
+              <section className={styles.featured} aria-label="Öne çıkanlar">
+                <div className={styles.sectionTitle}>
+                  <h2>Öne çıkanlar</h2>
+                </div>
+                <div className={styles.featuredTrack}>
+                  {featured.map((p, i) => (
                     <Link
+                      key={`feat-${p.id}`}
                       href={`/menu/${branchId}/product/${p.id}`}
-                      className={styles.row}
+                      className={styles.featCard}
                       prefetch
                     >
-                      <div className={styles.rowBody}>
-                        <strong>{p.name}</strong>
-                        {p.description ? <p>{p.description}</p> : null}
-                        <div className={styles.rowFoot}>
-                          <span className={styles.price}>
-                            {formatTryLabel(p.priceCents)}
-                          </span>
-                          {!p.isAvailable ? (
-                            <em className={styles.sold}>Tükendi</em>
-                          ) : (
-                            <span className={styles.plus} aria-hidden>
-                              +
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className={styles.rowMedia}>
+                      <div className={styles.featMedia}>
                         <SafeImage
                           src={resolveProductImage(p.slug, p.imageUrl)}
                           fallbackSrc={productImageFallback()}
-                          alt=""
-                          width={112}
-                          height={112}
-                          className={styles.rowImg}
+                          alt={p.name}
+                          fill
+                          priority={i === 0}
+                          sizes="260px"
+                          className={styles.featImg}
                         />
                       </div>
+                      <div className={styles.featBody}>
+                        <strong>{p.name}</strong>
+                        <span>{formatTryLabel(p.priceCents)}</span>
+                      </div>
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {cats.map((cat) => (
+              <section
+                key={cat.id}
+                id={`cat-${cat.slug}`}
+                className={styles.section}
+              >
+                <div className={styles.sectionTitle}>
+                  <h2>{cat.name}</h2>
+                </div>
+                <ul className={styles.list}>
+                  {cat.products.map((p) => (
+                    <li key={p.id}>
+                      <Link
+                        href={`/menu/${branchId}/product/${p.id}`}
+                        className={styles.row}
+                        prefetch
+                      >
+                        <div className={styles.rowBody}>
+                          <strong>{p.name}</strong>
+                          {p.description ? <p>{p.description}</p> : null}
+                          <div className={styles.rowFoot}>
+                            <span className={styles.price}>
+                              {formatTryLabel(p.priceCents)}
+                            </span>
+                            {!p.isAvailable ? (
+                              <em className={styles.sold}>Tükendi</em>
+                            ) : (
+                              <span className={styles.plus} aria-hidden>
+                                +
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.rowMedia}>
+                          <SafeImage
+                            src={resolveProductImage(p.slug, p.imageUrl)}
+                            fallbackSrc={productImageFallback()}
+                            alt=""
+                            width={112}
+                            height={112}
+                            className={styles.rowImg}
+                          />
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+          <MenuCartSidebar branchId={branchId} />
+        </div>
       )}
     </main>
   );

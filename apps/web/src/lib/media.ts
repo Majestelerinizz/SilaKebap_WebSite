@@ -73,7 +73,7 @@ export function resolveCategoryImage(slug?: string | null): string {
   if (!slug) return DEFAULT_CATEGORY;
   if (CATEGORY_ALIASES[slug]) return CATEGORY_ALIASES[slug];
   const key = Object.keys(CATEGORY_ALIASES).find((k) => slug.includes(k));
-  if (key) return CATEGORY_ALIASES[key];
+  if (key && CATEGORY_ALIASES[key]) return CATEGORY_ALIASES[key];
   return DEFAULT_CATEGORY;
 }
 

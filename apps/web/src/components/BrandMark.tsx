@@ -25,7 +25,8 @@ export function BrandMark({
         width={size}
         height={size}
         className={styles.logo}
-        priority
+        priority={size >= 36}
+        sizes={`${size}px`}
       />
       {showWordmark ? <span className={styles.word}>Sıla Kebap</span> : null}
     </Link>

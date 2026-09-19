@@ -1,14 +1,18 @@
+import Image from "next/image";
 import Link from "next/link";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { BrandMark } from "@/components/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BRAND } from "@/lib/media";
 import { apiUrl } from "@/lib/api";
 import styles from "./page.module.css";
 
+export const revalidate = 60;
+
 async function getBranches() {
   try {
     const res = await fetch(`${apiUrl}/api/catalog/branches`, {
-      next: { revalidate: 20 },
+      next: { revalidate: 60 },
     });
     if (!res.ok) return [];
     const data = (await res.json()) as {
@@ -27,11 +31,19 @@ async function getBranches() {
 }
 
 const QUICK = [
-  { label: "Kebaplar", src: "/menu/categories/kebaplar.jpg" },
-  { label: "Dürümler", src: "/menu/categories/durumler.jpg" },
-  { label: "Lahmacun", src: "/menu/categories/lahmacun-pide.jpg" },
-  { label: "Tatlılar", src: "/menu/categories/tatlilar.jpg" },
-  { label: "İçecekler", src: "/menu/categories/icecekler.jpg" },
+  { label: "Kebaplar", slug: "kebaplar", src: "/menu/categories/kebaplar.jpg" },
+  { label: "Dürümler", slug: "durumler", src: "/menu/categories/durumler.jpg" },
+  {
+    label: "Lahmacun",
+    slug: "lahmacun-pide",
+    src: "/menu/categories/lahmacun-pide.jpg",
+  },
+  { label: "Tatlılar", slug: "tatlilar", src: "/menu/categories/tatlilar.jpg" },
+  {
+    label: "İçecekler",
+    slug: "icecekler",
+    src: "/menu/categories/icecekler.jpg",
+  },
 ] as const;
 
 const SOCIAL = {
@@ -46,17 +58,23 @@ export default async function HomePage() {
 
   return (
     <main className={styles.page}>
+      <AnnouncementBar />
       <section className={styles.hero}>
-        <div
-          className={styles.media}
-          style={{ backgroundImage: `url(${BRAND.hero})` }}
-          aria-hidden
+        <Image
+          src={BRAND.hero}
+          alt=""
+          fill
+          priority
+          fetchPriority="high"
+          sizes="(max-width: 768px) 100vw, 1200px"
+          className={styles.heroImg}
+          quality={65}
         />
         <div className={styles.scrim} />
 
         <header className={styles.topBar}>
           <BrandMark inverted size={40} />
-          <nav className={styles.topNav}>
+          <nav className={styles.topNav} aria-label="Üst menü">
             <Link href="/track">Sipariş takip</Link>
             <ThemeToggle onDark />
           </nav>
@@ -91,10 +109,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={styles.panel}>
+      <section className={styles.panel} aria-labelledby="cat-heading">
         <div className={styles.panelInner}>
           <div className={styles.panelHead}>
-            <h2>Kategoriler</h2>
+            <h2 id="cat-heading">Kategoriler</h2>
             {menuHref ? (
               <Link href={menuHref} className={styles.allLink} prefetch>
                 Tüm menü
@@ -107,24 +125,36 @@ export default async function HomePage() {
               menuHref ? (
                 <Link
                   key={item.label}
-                  href={menuHref}
+                  href={`${menuHref}#${item.slug}`}
                   className={styles.catCard}
-                  prefetch
+                  prefetch={false}
                 >
-                  <span
-                    className={styles.catImg}
-                    style={{ backgroundImage: `url(${item.src})` }}
-                    aria-hidden
-                  />
+                  <span className={styles.catImgWrap}>
+                    <Image
+                      src={item.src}
+                      alt={item.label}
+                      fill
+                      sizes="(max-width: 640px) 42vw, 160px"
+                      className={styles.catImg}
+                      quality={60}
+                      loading="lazy"
+                    />
+                  </span>
                   <span className={styles.catLabel}>{item.label}</span>
                 </Link>
               ) : (
                 <div key={item.label} className={styles.catCard}>
-                  <span
-                    className={styles.catImg}
-                    style={{ backgroundImage: `url(${item.src})` }}
-                    aria-hidden
-                  />
+                  <span className={styles.catImgWrap}>
+                    <Image
+                      src={item.src}
+                      alt={item.label}
+                      fill
+                      sizes="(max-width: 640px) 42vw, 160px"
+                      className={styles.catImg}
+                      quality={60}
+                      loading="lazy"
+                    />
+                  </span>
                   <span className={styles.catLabel}>{item.label}</span>
                 </div>
               ),

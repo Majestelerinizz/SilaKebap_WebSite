@@ -20,6 +20,12 @@
   background-position: center 40%;
 }
 
+.heroImg {
+  object-fit: cover;
+  object-position: center 40%;
+  z-index: 0;
+}
+
 .scrim {
   position: absolute;
   inset: 0;
@@ -55,6 +61,12 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+.themeSlot {
+  display: inline-block;
+  width: 5.5rem;
+  height: 2.1rem;
+}
+
 .heroBody {
   position: relative;
   z-index: 1;
@@ -72,7 +84,8 @@
   margin: 0 0 0.65rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #ffe3c4;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .phoneLink {
@@ -100,9 +113,10 @@
 
 .sub {
   margin: 0.55rem 0 0;
-  color: var(--hero-muted);
+  color: #f0f0f0;
   line-height: 1.5;
   max-width: 26rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .actions {
@@ -179,7 +193,7 @@
 
 @media (min-width: 640px) {
   .catGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -199,11 +213,16 @@
   box-shadow: var(--shadow-hover);
 }
 
-.catImg {
+.catImgWrap {
+  position: relative;
   aspect-ratio: 1.2 / 1;
   border-radius: 10px;
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.catImg {
+  object-fit: cover;
 }
 
 .catLabel {

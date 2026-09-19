@@ -89,7 +89,7 @@ export default function TrackTokenClient({ token }: { token: string }) {
     if (!order) return -1;
     if (order.status === OrderStatus.CANCELLED) return -1;
     if (order.status === OrderStatus.PENDING_PAYMENT) return -1;
-    const idx = steps.indexOf(order.status as (typeof steps)[number]);
+    const idx = steps.findIndex((s) => s === order.status);
     if (idx >= 0) return idx;
     if (order.status === OrderStatus.DELIVERED) return steps.length - 1;
     return -1;
