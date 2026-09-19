@@ -64,7 +64,7 @@ export default function CheckoutPage() {
   const [quoteError, setQuoteError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   useEffect(() => {
     const sync = () => setCart(readCart());
@@ -96,7 +96,6 @@ export default function CheckoutPage() {
         };
 
         if (!res.ok) {
-          // Seed / DB reset sonrası eski sepet branchId'si 404 olur
           if (res.status === 404) {
             if (!cancelled) {
               setZones([]);
@@ -152,6 +151,7 @@ export default function CheckoutPage() {
     ? selectedZone.neighborhoods
     : [];
   const onlinePayment = paymentMethod === PaymentMethod.IYZICO_ONLINE;
+  const menuHref = cart?.branchId ? `/menu/${cart.branchId}` : "/";
 
   useEffect(() => {
     if (fulfillmentType === FulfillmentType.PICKUP) {
@@ -298,237 +298,325 @@ export default function CheckoutPage() {
     }
   }
 
+  const paymentOptions =
+    fulfillmentType === FulfillmentType.DELIVERY
+      ? [
+          { value: PaymentMethod.IYZICO_ONLINE, label: "Online" },
+          { value: PaymentMethod.CASH_ON_DELIVERY, label: "Kapıda nakit" },
+          { value: PaymentMethod.CARD_ON_DELIVERY, label: "Kapıda kart" },
+        ]
+      : [
+          { value: PaymentMethod.IYZICO_ONLINE, label: "Online" },
+          { value: PaymentMethod.PAY_AT_STORE, label: "Kasada" },
+        ];
+
+  const orderSummary = cart?.items.length ? (
+    <div className={styles.summaryCard}>
+      <div className={styles.summaryHead}>
+        <h2>Sipariş özeti</h2>
+        <Link href={menuHref} className={styles.editLink}>
+          Düzenle
+        </Link>
+      </div>
+      <ul className={styles.cartLines}>
+        {cart.items.map((item, idx) => {
+          const summary = formatOptionSummary(item.optionLabels);
+          const desc = item.productDescription?.trim() || "";
+          const open = openIdx === idx;
+          const lineTotal =
+            item.unitPriceCents != null
+              ? item.unitPriceCents * item.quantity
+              : null;
+          return (
+            <li key={`${item.productId}-${idx}`}>
+              <button
+                type="button"
+                className={styles.lineBtn}
+                onClick={() => setOpenIdx(open ? null : idx)}
+                aria-expanded={open}
+              >
+                <span className={styles.lineMain}>
+                  <span className={styles.lineTitle}>
+                    {item.quantity}× {item.productName ?? "Ürün"}
+                  </span>
+                  {summary ? (
+                    <span className={styles.lineMeta}>{summary}</span>
+                  ) : desc ? (
+                    <span className={styles.lineMeta}>{desc}</span>
+                  ) : null}
+                </span>
+                <span className={styles.lineRight}>
+                  {lineTotal != null ? (
+                    <em>{formatTryLabel(lineTotal)}</em>
+                  ) : null}
+                  <span className={styles.lineChevron} aria-hidden>
+                    {open ? "−" : "+"}
+                  </span>
+                </span>
+              </button>
+              {open ? (
+                <div className={styles.lineDetails}>
+                  {desc ? <p>{desc}</p> : null}
+                  {summary ? <p>Seçimler: {summary}</p> : null}
+                  {item.note ? <p>Not: {item.note}</p> : null}
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+
+      {quote ? (
+        <div className={styles.totals}>
+          <div>
+            <span>Ara toplam</span>
+            <span>{formatTryLabel(quote.subtotalCents)}</span>
+          </div>
+          <div>
+            <span>Teslimat</span>
+            <span>{formatTryLabel(quote.deliveryFeeCents)}</span>
+          </div>
+          {quote.discountCents > 0 ? (
+            <div>
+              <span>İndirim</span>
+              <span>−{formatTryLabel(quote.discountCents)}</span>
+            </div>
+          ) : null}
+          <div className={styles.grand}>
+            <span>Toplam</span>
+            <span>{formatTryLabel(quote.totalCents)}</span>
+          </div>
+        </div>
+      ) : null}
+      {quoteError ? <p className={styles.error}>{quoteError}</p> : null}
+    </div>
+  ) : null;
+
   return (
     <main className={styles.page}>
+      <div className={styles.atmosphere} aria-hidden />
+
       <header className={styles.top}>
-        <BrandMark href={cart?.branchId ? `/menu/${cart.branchId}` : "/"} size={36} />
+        <BrandMark href={menuHref} size={36} />
         <ThemeToggle />
       </header>
-      <h1>Ödeme</h1>
 
       {!cart?.items.length ? (
-        <p className={styles.hint}>
-          Sepet boş. <Link href="/">Menüden ürün ekleyin</Link>.
-        </p>
+        <div className={styles.empty}>
+          <h1>Ödeme</h1>
+          <p className={styles.hint}>
+            Sepet boş.{" "}
+            <Link href={menuHref}>Menüden ürün ekleyin</Link>.
+          </p>
+        </div>
       ) : (
-        <>
-          <ul className={styles.cartLines}>
-            {cart.items.map((item, idx) => {
-              const summary = formatOptionSummary(item.optionLabels);
-              const desc = item.productDescription?.trim() || "";
-              const open = openIdx === idx;
-              return (
-                <li key={`${item.productId}-${idx}`}>
-                  <button
-                    type="button"
-                    className={styles.lineBtn}
-                    onClick={() => setOpenIdx(open ? null : idx)}
-                    aria-expanded={open}
-                  >
-                    <span className={styles.lineTitle}>
-                      {item.quantity}× {item.productName ?? item.productId}
-                    </span>
-                    <span className={styles.lineChevron}>{open ? "−" : "+"}</span>
-                  </button>
-                  {desc ? (
-                    <p className={styles.lineOptions}>{desc}</p>
-                  ) : null}
-                  {summary ? (
-                    <p className={styles.lineOptions}>
-                      Seçimler: {summary}
-                    </p>
-                  ) : null}
-                  {!desc && !summary ? (
-                    <p className={styles.lineOptionsMuted}>Detay yok</p>
-                  ) : null}
-                  {open ? (
-                    <div className={styles.lineDetails}>
-                      {desc ? (
-                        <p>
-                          İçindekiler: <strong>{desc}</strong>
-                        </p>
-                      ) : null}
-                      {summary ? (
-                        <p>
-                          Seçimler: <strong>{summary}</strong>
-                        </p>
-                      ) : null}
-                      {item.unitPriceCents != null ? (
-                        <p>
-                          Birim: {formatTryLabel(item.unitPriceCents)} · Satır:{" "}
-                          {formatTryLabel(
-                            (item.unitPriceCents ?? 0) * item.quantity,
-                          )}
-                        </p>
-                      ) : null}
-                      {item.note ? <p>Not: {item.note}</p> : null}
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
+        <form className={styles.layout} onSubmit={submit}>
+          <div className={styles.mainCol}>
+            <header className={styles.hero}>
+              <p className={styles.eyebrow}>Son adım</p>
+              <h1>Ödeme</h1>
+              <p className={styles.sub}>
+                Bilgilerini gir, mangaldan sofrana gelsin.
+              </p>
+            </header>
 
-          <form className={styles.form} onSubmit={submit}>
-            <label>
-              Ad
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Telefon
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="05xx xxx xx xx"
-                required
-              />
-            </label>
-            <label>
-              {onlinePayment ? "E-posta" : "E-posta (opsiyonel)"}
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required={onlinePayment}
-              />
-            </label>
-            <label>
-              Teslimat tipi
-              <select
-                value={fulfillmentType}
-                onChange={(e) => setFulfillmentType(e.target.value)}
-              >
-                <option value={FulfillmentType.DELIVERY}>Kurye</option>
-                <option value={FulfillmentType.PICKUP}>Gel-Al</option>
-              </select>
-            </label>
-            <label>
-              Ödeme
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              >
-                <option value={PaymentMethod.IYZICO_ONLINE}>iyzico online</option>
-                {fulfillmentType === FulfillmentType.DELIVERY ? (
-                  <>
-                    <option value={PaymentMethod.CASH_ON_DELIVERY}>
-                      Kapıda nakit
-                    </option>
-                    <option value={PaymentMethod.CARD_ON_DELIVERY}>
-                      Kapıda kart
-                    </option>
-                  </>
-                ) : (
-                  <option value={PaymentMethod.PAY_AT_STORE}>Kasada</option>
-                )}
-              </select>
-            </label>
-            {fulfillmentType === FulfillmentType.DELIVERY ? (
-              <>
+            <div className={styles.mobileSummary}>{orderSummary}</div>
+
+            <section className={styles.block} aria-labelledby="contact-h">
+              <h2 id="contact-h">İletişim</h2>
+              <div className={styles.fields}>
                 <label>
-                  Adres
+                  Ad
                   <input
-                    value={line1}
-                    onChange={(e) => setLine1(e.target.value)}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="name"
                     required
                   />
                 </label>
                 <label>
-                  Teslimat bölgesi
-                  <select
-                    value={deliveryZoneId}
-                    onChange={(e) => setDeliveryZoneId(e.target.value)}
+                  Telefon
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="05xx xxx xx xx"
+                    inputMode="tel"
+                    autoComplete="tel"
                     required
-                    disabled={!zones.length}
-                  >
-                    {!zones.length ? (
-                      <option value="">Bölge yükleniyor / yok</option>
-                    ) : null}
-                    {zones.map((z) => (
-                      <option key={z.id} value={z.id}>
-                        {z.name} (+{formatTryLabel(z.feeCents)})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
-                {zonesError ? (
-                  <p className={styles.error}>
-                    {zonesError}{" "}
-                    <button
-                      type="button"
-                      className={styles.linkBtn}
-                      onClick={() => {
-                        clearCart();
-                        setCart(null);
-                        router.push("/");
-                      }}
-                    >
-                      Sepeti temizle
-                    </button>
-                  </p>
-                ) : null}
-                {zoneNeighborhoods.length > 0 ? (
+                <label>
+                  {onlinePayment ? "E-posta" : "E-posta (opsiyonel)"}
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required={onlinePayment}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className={styles.block} aria-labelledby="fulfill-h">
+              <h2 id="fulfill-h">Teslimat</h2>
+              <div
+                className={styles.seg}
+                role="group"
+                aria-label="Teslimat tipi"
+              >
+                <button
+                  type="button"
+                  className={
+                    fulfillmentType === FulfillmentType.DELIVERY
+                      ? styles.segOn
+                      : undefined
+                  }
+                  onClick={() => setFulfillmentType(FulfillmentType.DELIVERY)}
+                >
+                  Kurye
+                </button>
+                <button
+                  type="button"
+                  className={
+                    fulfillmentType === FulfillmentType.PICKUP
+                      ? styles.segOn
+                      : undefined
+                  }
+                  onClick={() => setFulfillmentType(FulfillmentType.PICKUP)}
+                >
+                  Gel-Al
+                </button>
+              </div>
+
+              {fulfillmentType === FulfillmentType.DELIVERY ? (
+                <div className={styles.fields}>
                   <label>
-                    Mahalle
-                    <select
-                      value={neighborhood}
-                      onChange={(e) => setNeighborhood(e.target.value)}
+                    Adres
+                    <input
+                      value={line1}
+                      onChange={(e) => setLine1(e.target.value)}
+                      placeholder="Sokak, bina, daire"
                       required
+                    />
+                  </label>
+                  <label>
+                    Teslimat bölgesi
+                    <select
+                      value={deliveryZoneId}
+                      onChange={(e) => setDeliveryZoneId(e.target.value)}
+                      required
+                      disabled={!zones.length}
                     >
-                      <option value="">Seçin</option>
-                      {zoneNeighborhoods.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
+                      {!zones.length ? (
+                        <option value="">Bölge yükleniyor / yok</option>
+                      ) : null}
+                      {zones.map((z) => (
+                        <option key={z.id} value={z.id}>
+                          {z.name} (+{formatTryLabel(z.feeCents)})
                         </option>
                       ))}
                     </select>
                   </label>
-                ) : null}
-              </>
-            ) : null}
-            <label>
-              Kupon
-              <input
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                placeholder="HOSGELDIN10"
-              />
-            </label>
+                  {zonesError ? (
+                    <p className={styles.error}>
+                      {zonesError}{" "}
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => {
+                          clearCart();
+                          setCart(null);
+                          router.push("/");
+                        }}
+                      >
+                        Sepeti temizle
+                      </button>
+                    </p>
+                  ) : null}
+                  {zoneNeighborhoods.length > 0 ? (
+                    <label>
+                      Mahalle
+                      <select
+                        value={neighborhood}
+                        onChange={(e) => setNeighborhood(e.target.value)}
+                        required
+                      >
+                        <option value="">Seçin</option>
+                        {zoneNeighborhoods.map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+              ) : (
+                <p className={styles.pickupNote}>
+                  Sipariş hazır olunca şubeden teslim alırsın.
+                </p>
+              )}
+            </section>
 
-            {quote ? (
-              <div className={styles.totals}>
-                <div>
-                  <span>Ara toplam</span>
-                  <span>{formatTryLabel(quote.subtotalCents)}</span>
-                </div>
-                <div>
-                  <span>Teslimat</span>
-                  <span>{formatTryLabel(quote.deliveryFeeCents)}</span>
-                </div>
-                {quote.discountCents > 0 ? (
-                  <div>
-                    <span>İndirim</span>
-                    <span>-{formatTryLabel(quote.discountCents)}</span>
-                  </div>
-                ) : null}
-                <div className={styles.grand}>
-                  <span>Toplam</span>
-                  <span>{formatTryLabel(quote.totalCents)}</span>
-                </div>
+            <section className={styles.block} aria-labelledby="pay-h">
+              <h2 id="pay-h">Ödeme</h2>
+              <div className={styles.segWrap} role="group" aria-label="Ödeme">
+                {paymentOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={
+                      paymentMethod === opt.value ? styles.segOn : undefined
+                    }
+                    onClick={() => setPaymentMethod(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
-            ) : null}
-            {quoteError ? <p className={styles.error}>{quoteError}</p> : null}
+              <label className={styles.coupon}>
+                Kupon
+                <input
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="HOSGELDIN10"
+                />
+              </label>
+            </section>
+
             {error ? <p className={styles.error}>{error}</p> : null}
 
-            <button type="submit" disabled={loading || !quote}>
-              {loading ? "Gönderiliyor…" : "Siparişi oluştur"}
+            <div className={styles.mobileCta}>
+              <button
+                type="submit"
+                className={styles.submit}
+                disabled={loading || !quote}
+              >
+                {loading
+                  ? "Gönderiliyor…"
+                  : quote
+                    ? `Siparişi oluştur · ${formatTryLabel(quote.totalCents)}`
+                    : "Siparişi oluştur"}
+              </button>
+            </div>
+          </div>
+
+          <aside className={styles.sideCol}>
+            {orderSummary}
+            <button
+              type="submit"
+              className={styles.submit}
+              disabled={loading || !quote}
+            >
+              {loading
+                ? "Gönderiliyor…"
+                : quote
+                  ? `Siparişi oluştur · ${formatTryLabel(quote.totalCents)}`
+                  : "Siparişi oluştur"}
             </button>
-          </form>
-        </>
+          </aside>
+        </form>
       )}
     </main>
   );
