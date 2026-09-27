@@ -1,6 +1,6 @@
 # Proje durumu (v1)
 
-Son güncelleme: 2026-09-19
+Son güncelleme: 2026-09-27
 
 ## Tamamlanma (kabaca)
 
@@ -16,12 +16,12 @@ Son güncelleme: 2026-09-19
 
 ## Canlı URL’ler
 
-- Web: https://example.com  
-- Admin: https://admin.example.com/login  
-- Mutfak: https://admin.example.com/kitchen  
-- Kurye: https://admin.example.com/courier  
-- Health: https://api.example.com/api/health  
-- Takip: https://example.com/track  
+- Web: http://62.171.146.132.nip.io  
+- Admin: http://admin.62.171.146.132.nip.io/login  
+- Mutfak: http://admin.62.171.146.132.nip.io/kitchen  
+- Kurye: http://admin.62.171.146.132.nip.io/courier  
+- Health: http://62.171.146.132.nip.io/api/health  
+- Takip: http://62.171.146.132.nip.io/track  
 
 SSH: `C:\Users\Yusuf\.ssh` · Host `contabo`
 

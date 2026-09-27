@@ -46,6 +46,6 @@ app.use(errorHandler);
 const io = await createSocketServer(httpServer);
 app.set("io", io);
 
-httpServer.listen(env.API_PORT, () => {
+httpServer.listen(env.API_PORT, "127.0.0.1", () => {
   console.log(`API listening on :${env.API_PORT}`);
 });

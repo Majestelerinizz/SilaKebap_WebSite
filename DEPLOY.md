@@ -16,12 +16,13 @@
 
 | Public host | systemd | Listen |
 |---|---|---|
-| https://example.com | `silakebap-web` | `13100` |
-| https://www.example.com | `silakebap-web` | `13100` |
-| https://admin.example.com | `silakebap-admin` | `13101` |
-| https://api.example.com | `silakebap-api` | `14100` |
+| http://62.171.146.132.nip.io | `silakebap-web` | `13100` |
+| http://admin.62.171.146.132.nip.io | `silakebap-admin` | `13101` |
+| http://62.171.146.132.nip.io/api | `silakebap-api` | `14100` |
 
-Health: `GET https://api.example.com/api/health` → `{"ok":true,...,"db":"up"}`
+Health: `GET http://62.171.146.132.nip.io/api/health` → `{"ok":true,"service":"silakebap-api"}`
+
+Gerçek alan adı gelince `deploy/nginx/demo-host.conf` içindeki `server_name` ve sunucudaki `WEB_ORIGIN` / `ADMIN_ORIGIN` / `NEXT_PUBLIC_*` değişir. `silakebapgazianteplahmacunu.com` bu uygulamaya bağlı değildir.
 
 ### Admin paneli yolları
 

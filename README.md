@@ -12,18 +12,19 @@
 | `packages/database` | PostgreSQL + Prisma |
 | `packages/shared` | Enum, para, checkout Zod, TR etiketler |
 
-## Canlı (production)
+## Canlı demo
 
-Contabo VPS + CloudPanel nginx + TLS. SSH: `~/.ssh/config` → Host **`contabo`**.
+Sunucu sürekli açık. Bu bilgisayar kapalı olsa da adresler çalışır. Gerçek alan adı bağlanınca nginx `server_name` ile `WEB_ORIGIN`, `ADMIN_ORIGIN`, `NEXT_PUBLIC_API_URL` ve `NEXT_PUBLIC_SITE_URL` değişir; kod aynı kalır.
 
-| Servis | URL | Upstream |
-|---|---|---|
-| Müşteri | https://example.com | `127.0.0.1:13100` |
-| Admin | https://admin.example.com | `127.0.0.1:13101` |
-| API | https://api.example.com | `127.0.0.1:14100` |
-| Health | https://api.example.com/api/health | — |
+| Servis | URL |
+|---|---|
+| Müşteri | http://62.171.146.132.nip.io |
+| Admin giriş | http://admin.62.171.146.132.nip.io/login |
+| Mutfak | http://admin.62.171.146.132.nip.io/kitchen |
+| Kurye | http://admin.62.171.146.132.nip.io/courier |
+| Health | http://62.171.146.132.nip.io/api/health |
 
-Adresler yer tutucu. Gerçek alan adı bağlanınca `example.com` değişir; şu an bu kod o siteye bağlı değil.
+Giriş kullanıcı adı `admin`, şifre `Admin1234!`. Mutfak: `mutfak` / `Kitchen123!`. Kurye: `kurye` / `Courier123!`.
 
 Kod yolu sunucuda: `/opt/silakebap` · user: `silakebap` · secrets: `/opt/silakebap/.env`
 
