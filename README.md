@@ -52,7 +52,7 @@ pnpm --filter @silakebap/admin dev    # :3001
 
 ### Seed hesapları (yalnızca local / ilk kurulum)
 
-Şifreler repoda tutulmaz. `pnpm db:seed` öncesi kök `.env` veya Doppler `dev` içine en az 10 karakter yaz:
+`.env` boşsa seed aşağıdaki varsayılanları kullanır. Şifreyi değiştirince aynı isimle kök `.env` veya Doppler `dev` içine yaz (en az 10 karakter); seed bir sonraki çalıştırmada onu alır.
 
 ```
 SEED_ADMIN_PASSWORD=
@@ -60,13 +60,13 @@ SEED_KITCHEN_PASSWORD=
 SEED_COURIER_PASSWORD=
 ```
 
-| Rol | E-posta |
-|---|---|
-| Süper admin | admin@silakebap.local |
-| Mutfak | mutfak@silakebap.local |
-| Kurye | kurye@silakebap.local |
+| Rol | E-posta | Varsayılan şifre |
+|---|---|---|
+| Süper admin | admin@silakebap.local | Admin1234! |
+| Mutfak | mutfak@silakebap.local | Kitchen123! |
+| Kurye | kurye@silakebap.local | Courier123! |
 
-Bu hesapları prod veritabanında kullanma. Örnek kupon kodu seed’de `HOSGELDIN10`.
+Örnek kupon kodu seed’de `HOSGELDIN10`.
 
 ## Deploy (laptop → Contabo)
 

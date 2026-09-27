@@ -25,10 +25,11 @@ function loadEnvFile(path: string) {
 loadEnvFile(resolve(process.cwd(), ".env"));
 loadEnvFile(resolve(process.cwd(), "../../.env"));
 
-function requireSeedPassword(name: string): string {
+function seedPassword(name: string, fallback: string): string {
   const value = process.env[name]?.trim() ?? "";
+  if (!value) return fallback;
   if (value.length < 10) {
-    throw new Error(`${name} must be set to at least 10 characters before seeding`);
+    throw new Error(`${name} must be at least 10 characters`);
   }
   return value;
 }
@@ -139,7 +140,10 @@ async function main() {
     });
   }
 
-  const passwordHash = await bcrypt.hash(requireSeedPassword("SEED_ADMIN_PASSWORD"), 10);
+  const passwordHash = await bcrypt.hash(
+    seedPassword("SEED_ADMIN_PASSWORD", "Admin1234!"),
+    10,
+  );
   const admin = await prisma.user.create({
     data: {
       email: "admin@silakebap.local",
@@ -155,7 +159,7 @@ async function main() {
       email: "mutfak@silakebap.local",
       name: "Mutfak",
       phone: "+905550000002",
-      passwordHash: await bcrypt.hash(requireSeedPassword("SEED_KITCHEN_PASSWORD"), 10),
+      passwordHash: await bcrypt.hash(seedPassword("SEED_KITCHEN_PASSWORD", "Kitchen123!"), 10),
     },
   });
 
@@ -164,7 +168,7 @@ async function main() {
       email: "kurye@silakebap.local",
       name: "Kurye",
       phone: "+905550000003",
-      passwordHash: await bcrypt.hash(requireSeedPassword("SEED_COURIER_PASSWORD"), 10),
+      passwordHash: await bcrypt.hash(seedPassword("SEED_COURIER_PASSWORD", "Courier123!"), 10),
     },
   });
 
