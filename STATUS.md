@@ -16,12 +16,12 @@ Son güncelleme: 2026-09-27
 
 ## Canlı URL’ler
 
-- Web: http://62.171.146.132.nip.io  
-- Admin: http://admin.62.171.146.132.nip.io/login  
-- Mutfak: http://admin.62.171.146.132.nip.io/kitchen  
-- Kurye: http://admin.62.171.146.132.nip.io/courier  
-- Health: http://62.171.146.132.nip.io/api/health  
-- Takip: http://62.171.146.132.nip.io/track  
+- Web: https://62.171.146.132.nip.io  
+- Admin: https://admin.62.171.146.132.nip.io/login  
+- Mutfak: https://admin.62.171.146.132.nip.io/kitchen  
+- Kurye: https://admin.62.171.146.132.nip.io/courier  
+- Health: https://62.171.146.132.nip.io/api/health  
+- Takip: https://62.171.146.132.nip.io/track  
 
 SSH: `C:\Users\Yusuf\.ssh` · Host `contabo`
 

@@ -1,6 +1,6 @@
 # Entegrasyonlar (Resend + iyzico + Cloudflare R2)
 
-Canlı demo: `http://62.171.146.132.nip.io` ve `http://admin.62.171.146.132.nip.io`. Gerçek alan adı sonra bu adreslerin yerine geçer.
+Canlı demo: `https://62.171.146.132.nip.io` ve `https://admin.62.171.146.132.nip.io`. Gerçek alan adı sonra bu adreslerin yerine geçer.
 Sırlar: VPS `/opt/silakebap/.env` veya [DOPPLER.md](./DOPPLER.md). Şablon: [deploy/remote.env.example](./deploy/remote.env.example).
 
 Disk `.env` yalnızca geçici lokal fallback; commit etme.

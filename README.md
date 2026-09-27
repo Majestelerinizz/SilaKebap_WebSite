@@ -18,11 +18,11 @@ Sunucu sürekli açık. Bu bilgisayar kapalı olsa da adresler çalışır. Ger�
 
 | Servis | URL |
 |---|---|
-| Müşteri | http://62.171.146.132.nip.io |
-| Admin giriş | http://admin.62.171.146.132.nip.io/login |
-| Mutfak | http://admin.62.171.146.132.nip.io/kitchen |
-| Kurye | http://admin.62.171.146.132.nip.io/courier |
-| Health | http://62.171.146.132.nip.io/api/health |
+| Müşteri | https://62.171.146.132.nip.io |
+| Admin giriş | https://admin.62.171.146.132.nip.io/login |
+| Mutfak | https://admin.62.171.146.132.nip.io/kitchen |
+| Kurye | https://admin.62.171.146.132.nip.io/courier |
+| Health | https://62.171.146.132.nip.io/api/health |
 
 Giriş kullanıcı adı `admin`, şifre `Admin1234!`. Mutfak: `mutfak` / `Kitchen123!`. Kurye: `kurye` / `Courier123!`.
 
