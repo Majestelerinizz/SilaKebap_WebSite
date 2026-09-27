@@ -14,8 +14,6 @@ function redirectFor(user: StaffUser): string {
   return "/dashboard";
 }
 
-const showSeedHint = process.env.NODE_ENV === "development";
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -109,12 +107,6 @@ export default function LoginPage() {
           </button>
         </form>
         {error ? <p className={styles.error}>{error}</p> : null}
-        {showSeedHint ? (
-          <p className={styles.hint}>
-            Seed: admin@silakebap.local / Admin1234! · mutfak@… / Kitchen123! ·
-            kurye@… / Courier123!
-          </p>
-        ) : null}
       </div>
     </main>
   );

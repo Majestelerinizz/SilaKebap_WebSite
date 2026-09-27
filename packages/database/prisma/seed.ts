@@ -1,5 +1,37 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { PrismaClient, StaffRole, OptionGroupType, CouponType } from "@prisma/client";
 import bcrypt from "bcryptjs";
+
+function loadEnvFile(path: string) {
+  if (!existsSync(path)) return;
+  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+loadEnvFile(resolve(process.cwd(), ".env"));
+loadEnvFile(resolve(process.cwd(), "../../.env"));
+
+function requireSeedPassword(name: string): string {
+  const value = process.env[name]?.trim() ?? "";
+  if (value.length < 10) {
+    throw new Error(`${name} must be set to at least 10 characters before seeding`);
+  }
+  return value;
+}
 
 const prisma = new PrismaClient();
 
@@ -107,8 +139,7 @@ async function main() {
     });
   }
 
-  // Seed passwords meet API policy (min 10). Change immediately on any shared/prod DB.
-  const passwordHash = await bcrypt.hash("Admin1234!", 10);
+  const passwordHash = await bcrypt.hash(requireSeedPassword("SEED_ADMIN_PASSWORD"), 10);
   const admin = await prisma.user.create({
     data: {
       email: "admin@silakebap.local",
@@ -124,7 +155,7 @@ async function main() {
       email: "mutfak@silakebap.local",
       name: "Mutfak",
       phone: "+905550000002",
-      passwordHash: await bcrypt.hash("Kitchen123!", 10),
+      passwordHash: await bcrypt.hash(requireSeedPassword("SEED_KITCHEN_PASSWORD"), 10),
     },
   });
 
@@ -133,7 +164,7 @@ async function main() {
       email: "kurye@silakebap.local",
       name: "Kurye",
       phone: "+905550000003",
-      passwordHash: await bcrypt.hash("Courier123!", 10),
+      passwordHash: await bcrypt.hash(requireSeedPassword("SEED_COURIER_PASSWORD"), 10),
     },
   });
 
