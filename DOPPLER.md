@@ -26,10 +26,10 @@ doppler setup
 Örnek `prd` / Contabo origin’ler (canlı domain):
 
 ```
-WEB_ORIGIN=https://silakebapgazianteplahmacunu.com
-ADMIN_ORIGIN=https://admin.silakebapgazianteplahmacunu.com
-API_PUBLIC_URL=https://api.silakebapgazianteplahmacunu.com
-NEXT_PUBLIC_API_URL=https://api.silakebapgazianteplahmacunu.com
+WEB_ORIGIN=https://example.com
+ADMIN_ORIGIN=https://admin.example.com
+API_PUBLIC_URL=https://api.example.com
+NEXT_PUBLIC_API_URL=https://api.example.com
 IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
 NODE_ENV=production
 API_PORT=14100

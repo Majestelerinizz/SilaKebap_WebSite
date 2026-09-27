@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { io, type Socket } from "socket.io-client";
 import { AdminShell } from "@/components/AdminShell";
 import {
   apiFetch,
@@ -10,6 +9,7 @@ import {
   resolveActiveBranchId,
   type StaffUser,
 } from "@/lib/auth";
+import { watchOrders } from "@/lib/realtime";
 import styles from "./page.module.css";
 
 export default function DashboardPage() {
@@ -71,17 +71,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!branchId) return;
-    const socket: Socket = io(apiUrl, { transports: ["websocket", "polling"] });
-    socket.emit("join:admin", branchId);
-    socket.on("connect", () => setLive(true));
-    socket.on("disconnect", () => setLive(false));
-    const refresh = () => void load(readStaff(), branchId);
-    socket.on("order:created", refresh);
-    socket.on("order:updated", refresh);
-    return () => {
-      socket.disconnect();
-      setLive(false);
-    };
+    return watchOrders({
+      branchId,
+      room: "admin",
+      onChange: () => void load(readStaff(), branchId),
+      onLive: setLive,
+    });
   }, [branchId, load]);
 
   const role = staff

@@ -11,21 +11,21 @@ import { ordersRouter } from "./routes/orders.js";
 import { authRouter } from "./routes/auth.js";
 import { paymentsRouter } from "./routes/payments.js";
 import { adminRouter } from "./routes/admin.js";
-import { createSocketServer } from "./realtime/socket.js";
+import { createSocketServer, isAllowedOrigin } from "./realtime/socket.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const httpServer = createServer(app);
 
-// Behind Caddy/Nginx: correct client IP for rate limits
-if (env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
-}
+// Behind nginx, Next rewrite, or the temporary tunnel.
+app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(
   cors({
-    origin: [env.WEB_ORIGIN, env.ADMIN_ORIGIN],
+    origin(origin, callback) {
+      callback(null, isAllowedOrigin(origin));
+    },
     credentials: true,
   }),
 );

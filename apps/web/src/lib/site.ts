@@ -4,7 +4,7 @@ export const SITE = {
   url: (
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.WEB_ORIGIN ||
-    "https://silakebapgazianteplahmacunu.com"
+    "https://example.com"
   ).replace(/\/$/, ""),
   description:
     "Sıla Kebap — mangaldan sofrana. Online sipariş, kurye veya gel-al. Adana kebap, dürüm, lahmacun ve tatlılar.",

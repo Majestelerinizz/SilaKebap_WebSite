@@ -4,10 +4,29 @@ import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { env } from "../config/env.js";
 
+export function isAllowedOrigin(origin: string | undefined): boolean {
+  if (!origin) return true;
+  if (origin === env.WEB_ORIGIN || origin === env.ADMIN_ORIGIN) return true;
+  if (env.NODE_ENV === "production") return false;
+  try {
+    const host = new URL(origin).hostname;
+    if (host === "localhost" || host === "127.0.0.1") return true;
+    if (host.endsWith(".trycloudflare.com")) return true;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 export async function createSocketServer(httpServer: HttpServer): Promise<Server> {
   const io = new Server(httpServer, {
     cors: {
-      origin: [env.WEB_ORIGIN, env.ADMIN_ORIGIN],
+      origin: (origin, callback) => {
+        callback(null, isAllowedOrigin(origin));
+      },
       credentials: true,
     },
   });

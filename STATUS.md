@@ -16,12 +16,12 @@ Son güncelleme: 2026-09-19
 
 ## Canlı URL’ler
 
-- Web: https://silakebapgazianteplahmacunu.com  
-- Admin: https://admin.silakebapgazianteplahmacunu.com/login  
-- Mutfak: https://admin.silakebapgazianteplahmacunu.com/kitchen  
-- Kurye: https://admin.silakebapgazianteplahmacunu.com/courier  
-- Health: https://api.silakebapgazianteplahmacunu.com/api/health  
-- Takip: https://silakebapgazianteplahmacunu.com/track  
+- Web: https://example.com  
+- Admin: https://admin.example.com/login  
+- Mutfak: https://admin.example.com/kitchen  
+- Kurye: https://admin.example.com/courier  
+- Health: https://api.example.com/api/health  
+- Takip: https://example.com/track  
 
 SSH: `C:\Users\Yusuf\.ssh` · Host `contabo`
 

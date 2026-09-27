@@ -1,6 +1,6 @@
 # Entegrasyonlar (Resend + iyzico + Cloudflare R2)
 
-Canlı domain: `silakebapgazianteplahmacunu.com` (admin / api alt domainleri).
+Canlı domain: `example.com` (admin / api alt domainleri).
 Sırlar: VPS `/opt/silakebap/.env` veya [DOPPLER.md](./DOPPLER.md). Şablon: [deploy/remote.env.example](./deploy/remote.env.example).
 
 Disk `.env` yalnızca geçici lokal fallback; commit etme.

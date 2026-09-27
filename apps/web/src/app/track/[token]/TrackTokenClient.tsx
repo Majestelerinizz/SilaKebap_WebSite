@@ -71,7 +71,7 @@ export default function TrackTokenClient({ token }: { token: string }) {
       setOrder(json.order);
     }
     void load();
-    const pollId = setInterval(() => void load(), 8000);
+    const pollId = setInterval(() => void load(), 4000);
     return () => {
       cancelled = true;
       clearInterval(pollId);

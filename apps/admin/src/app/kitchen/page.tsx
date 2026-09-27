@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { io, Socket } from "socket.io-client";
 import {
   OrderStatus,
   formatTryLabel,
@@ -20,6 +19,7 @@ import {
   readToken,
   resolveActiveBranchId,
 } from "@/lib/auth";
+import { watchOrders } from "@/lib/realtime";
 import styles from "./kitchen.module.css";
 
 type OrderRow = {
@@ -149,6 +149,7 @@ export default function KitchenPage() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [branchId, setBranchId] = useState("");
   const [error, setError] = useState("");
+  const [live, setLive] = useState(false);
 
   const visibleOrders = useMemo(
     () => orders.filter((o) => !HIDDEN_STATUSES.has(o.status)),
@@ -200,13 +201,12 @@ export default function KitchenPage() {
 
   useEffect(() => {
     if (!branchId) return;
-    const socket: Socket = io(apiUrl, { transports: ["websocket", "polling"] });
-    socket.emit("join:kitchen", branchId);
-    socket.on("order:created", () => void load(branchId));
-    socket.on("order:updated", () => void load(branchId));
-    return () => {
-      socket.disconnect();
-    };
+    return watchOrders({
+      branchId,
+      room: "kitchen",
+      onChange: () => void load(branchId),
+      onLive: setLive,
+    });
   }, [branchId, load]);
 
   async function setStatus(orderId: string, status: string) {
@@ -251,7 +251,9 @@ export default function KitchenPage() {
           </div>
         </div>
         <div className={styles.headerRight}>
-          <span className={styles.count}>{visibleOrders.length} aktif</span>
+          <span className={styles.count}>
+            {visibleOrders.length} aktif{live ? " · Canlı" : ""}
+          </span>
           <button
             type="button"
             className={styles.refresh}

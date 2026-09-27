@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
 import {
   OrderStatus,
   formatTryLabel,
@@ -19,6 +18,7 @@ import {
   readToken,
   resolveActiveBranchId,
 } from "@/lib/auth";
+import { watchOrders } from "@/lib/realtime";
 import styles from "./courier.module.css";
 
 type OrderRow = {
@@ -101,13 +101,11 @@ export default function CourierPage() {
 
   useEffect(() => {
     if (!branchId) return;
-    const socket: Socket = io(apiUrl, { transports: ["websocket", "polling"] });
-    socket.emit("join:courier", branchId);
-    socket.on("order:created", () => void load(branchId));
-    socket.on("order:updated", () => void load(branchId));
-    return () => {
-      socket.disconnect();
-    };
+    return watchOrders({
+      branchId,
+      room: "courier",
+      onChange: () => void load(branchId),
+    });
   }, [branchId, load]);
 
   async function setStatus(orderId: string, status: string) {

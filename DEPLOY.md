@@ -16,12 +16,12 @@
 
 | Public host | systemd | Listen |
 |---|---|---|
-| https://silakebapgazianteplahmacunu.com | `silakebap-web` | `13100` |
-| https://www.silakebapgazianteplahmacunu.com | `silakebap-web` | `13100` |
-| https://admin.silakebapgazianteplahmacunu.com | `silakebap-admin` | `13101` |
-| https://api.silakebapgazianteplahmacunu.com | `silakebap-api` | `14100` |
+| https://example.com | `silakebap-web` | `13100` |
+| https://www.example.com | `silakebap-web` | `13100` |
+| https://admin.example.com | `silakebap-admin` | `13101` |
+| https://api.example.com | `silakebap-api` | `14100` |
 
-Health: `GET https://api.silakebapgazianteplahmacunu.com/api/health` → `{"ok":true,...,"db":"up"}`
+Health: `GET https://api.example.com/api/health` → `{"ok":true,...,"db":"up"}`
 
 ### Admin paneli yolları
 

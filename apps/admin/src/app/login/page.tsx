@@ -57,12 +57,13 @@ export default function LoginPage() {
         <p className={styles.lead}>Mutfak, kurye ve yönetim paneli</p>
         <form onSubmit={onSubmit} className={styles.form}>
           <label>
-            E-posta
+            Kullanıcı
             <input
-              type="email"
+              type="text"
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin"
               required
             />
           </label>

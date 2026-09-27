@@ -18,10 +18,12 @@ Contabo VPS + CloudPanel nginx + TLS. SSH: `~/.ssh/config` → Host **`contabo`*
 
 | Servis | URL | Upstream |
 |---|---|---|
-| Müşteri | https://silakebapgazianteplahmacunu.com | `127.0.0.1:13100` |
-| Admin | https://admin.silakebapgazianteplahmacunu.com | `127.0.0.1:13101` |
-| API | https://api.silakebapgazianteplahmacunu.com | `127.0.0.1:14100` |
-| Health | https://api.silakebapgazianteplahmacunu.com/api/health | — |
+| Müşteri | https://example.com | `127.0.0.1:13100` |
+| Admin | https://admin.example.com | `127.0.0.1:13101` |
+| API | https://api.example.com | `127.0.0.1:14100` |
+| Health | https://api.example.com/api/health | — |
+
+Adresler yer tutucu. Gerçek alan adı bağlanınca `example.com` değişir; şu an bu kod o siteye bağlı değil.
 
 Kod yolu sunucuda: `/opt/silakebap` · user: `silakebap` · secrets: `/opt/silakebap/.env`
 

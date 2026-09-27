@@ -74,7 +74,7 @@ ssh "${SSH_HOST}" \
   "REMOTE_PATH='${REMOTE_PATH}' REMOTE_USER='${REMOTE_USER}' DO_SEED='${DO_SEED}' bash '${REMOTE_PATH}/deploy/scripts/remote-release.sh'"
 
 echo "==> public smoke"
-if curl -fsS "https://api.silakebapgazianteplahmacunu.com/api/health" >/tmp/silakebap-health.json 2>/dev/null; then
+if curl -fsS "https://api.example.com/api/health" >/tmp/silakebap-health.json 2>/dev/null; then
   cat /tmp/silakebap-health.json
   echo
 else
@@ -83,6 +83,6 @@ else
 fi
 
 echo "==> deploy finished"
-echo "    Web:   https://silakebapgazianteplahmacunu.com  (→ :${WEB_PORT})"
-echo "    Admin: https://admin.silakebapgazianteplahmacunu.com  (→ :${ADMIN_PORT})"
-echo "    API:   https://api.silakebapgazianteplahmacunu.com  (→ :${API_PORT})"
+echo "    Web:   https://example.com  (→ :${WEB_PORT})"
+echo "    Admin: https://admin.example.com  (→ :${ADMIN_PORT})"
+echo "    API:   https://api.example.com  (→ :${API_PORT})"

@@ -12,9 +12,20 @@ import { authRateLimiter } from "../middleware/rateLimit.js";
 export const authRouter = Router();
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().min(1).max(200),
   password: z.string().min(10).max(128),
 });
+
+const STAFF_LOGIN: Record<string, string> = {
+  admin: "admin@silakebap.local",
+  mutfak: "mutfak@silakebap.local",
+  kurye: "kurye@silakebap.local",
+};
+
+function resolveStaffLogin(raw: string): string {
+  const value = raw.trim().toLowerCase();
+  return STAFF_LOGIN[value] ?? value;
+}
 
 const refreshSchema = z.object({
   refreshToken: z.string().min(20),
@@ -51,7 +62,7 @@ authRouter.post("/login", authRateLimiter, async (req, res, next) => {
   try {
     const body = loginSchema.parse(req.body);
     const user = await prisma.user.findUnique({
-      where: { email: body.email },
+      where: { email: resolveStaffLogin(body.email) },
       include: { staffMemberships: true },
     });
     if (!user?.passwordHash) {

@@ -19,7 +19,7 @@ e-ticaret platformu. Detaylı kapsam için `SILAKEBAP.md` dosyasına bak.
 - **Ödeme:** iyzico API (sandbox/live `.env`)
 - **E-posta:** pluggable SMTP (v1); SMS sonra
 - **Görseller:** Cloudflare R2
-- **Hosting:** Contabo VPS (`/opt/silakebap`) + CloudPanel nginx TLS; web `13100` / admin `13101` / api `14100`; domain `silakebapgazianteplahmacunu.com`; SSH Host `contabo`; deploy `bash deploy/scripts/deploy.sh` (see DEPLOY.md)
+- **Hosting:** Contabo VPS (`/opt/silakebap`) + CloudPanel nginx TLS; web `13100` / admin `13101` / api `14100`; domain `example.com`; SSH Host `contabo`; deploy `bash deploy/scripts/deploy.sh` (see DEPLOY.md)
 - **DB ortamları:** geliştirme/test → Neon; production → VPS localhost PostgreSQL
 
 ## Klasör Yapısı

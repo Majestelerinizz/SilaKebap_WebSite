@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatTryLabel, orderStatusLabel } from "@silakebap/shared";
-import { io, type Socket } from "socket.io-client";
 import { AdminShell } from "@/components/AdminShell";
 import {
   apiFetch,
@@ -10,6 +9,7 @@ import {
   clearSession,
   resolveActiveBranchId,
 } from "@/lib/auth";
+import { watchOrders } from "@/lib/realtime";
 import { useRouter } from "next/navigation";
 import styles from "../adminForms.module.css";
 
@@ -67,16 +67,12 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!branchId) return;
-    const socket: Socket = io(apiUrl, { transports: ["websocket", "polling"] });
-    socket.emit("join:admin", branchId);
-    socket.on("connect", () => setLive(true));
-    socket.on("disconnect", () => setLive(false));
-    socket.on("order:created", () => void load(branchId));
-    socket.on("order:updated", () => void load(branchId));
-    return () => {
-      socket.disconnect();
-      setLive(false);
-    };
+    return watchOrders({
+      branchId,
+      room: "admin",
+      onChange: () => void load(branchId),
+      onLive: setLive,
+    });
   }, [branchId, load]);
 
   return (
